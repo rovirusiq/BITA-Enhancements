@@ -1,1 +1,27 @@
+apply plugin: 'distribution'
 
+evaluationDependsOn ":model"
+evaluationDependsOn ":surrogation-scripts"
+
+allprojects{
+	version="1.0";
+}
+
+distributions{
+	main{
+		contents{
+			from project(':model').tasks['jar'].outputs
+			from project(':surrogation-scripts').tasks['jar'].outputs
+		}
+	}
+}
+
+task testReport(type: TestReport) {
+	destinationDir = file("$buildDir/reports/allTests")
+	// Include the results from the `test` task in all subprojects
+	def lst=subprojects*.tasks.test
+	reportOn lst
+}
+
+
+assemble.dependsOn testReport

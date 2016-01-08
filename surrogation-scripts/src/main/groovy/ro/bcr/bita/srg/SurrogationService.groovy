@@ -22,15 +22,6 @@ public class SurrogationService {
 	private Sql createSqlInstance() {
 		return Sql.newInstance(connectionDetails.provideJdbcConnectionString(),connectionDetails.provideJdbcUsername(),connectionDetails.provideJdbcPassword());
 	}
-	
-	private String removeComments (String strSrgExpr){
-		String rsp=strSrgExpr;
-		rsp = rsp.replaceAll("/\\*.*\\*/", "");
-		rsp = rsp.replaceAll("\r\n", "");
-		rsp = rsp.replaceAll("\n", "");
-		rsp = rsp.trim();
-		return rsp;
-	};
 
 	private Closure clRemoveCommentsFromSurrogationExpression= {srgExprString->
 		String rsp=srgExprString;

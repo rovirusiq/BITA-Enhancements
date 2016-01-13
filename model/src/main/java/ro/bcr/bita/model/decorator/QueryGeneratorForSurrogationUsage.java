@@ -2,6 +2,7 @@ package ro.bcr.bita.model.decorator;
 
 import ro.bcr.bita.model.ColumnPath;
 import ro.bcr.bita.model.SurrogationUsage;
+import ro.bcr.bita.model.TableDefinition;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,96 +12,21 @@ import java.util.Map;
 public class QueryGeneratorForSurrogationUsage implements IQueryGenerator {
 	
 	
-	private final Context ctx;
 	private final SurrogationUsage srgUsg;
+	private String schemaName="";
+	private String tableName="CMT_MAPPING_LINE";
 	
 	
-	public static class Context {
-		private String schemaName;
-		private String version;
-		private String release;
-		private String targetLayerName;
-		private String loadUserName;
-		
-		
-		/**
-		 * @return the schemaName
-		 */
-		public String getSchemaName() {
-			return schemaName;
+	public QueryGeneratorForSurrogationUsage(SurrogationUsage srgUsg,TableDefinition targetTable) {
+		this.srgUsg=srgUsg;
+		if (targetTable!=null) {
+			this.schemaName=targetTable.getSchemaName();
+			this.tableName=targetTable.getName();
 		}
-		/**
-		 * @param schemaName the schemaName to set
-		 */
-		public void setSchemaName(String schemaName) {
-			this.schemaName = schemaName;
-		}
-		/**
-		 * @return the version
-		 */
-		public String getVersion() {
-			return version;
-		}
-		/**
-		 * @return the release
-		 */
-		public String getRelease() {
-			return release;
-		}
-		/**
-		 * @return the targetLayerName
-		 */
-		public String getTargetLayerName() {
-			return targetLayerName;
-		}
-		/**
-		 * @return the loadUserName
-		 */
-		public String getLoadUserName() {
-			return loadUserName;
-		}
-		/**
-		 * @param version the version to set
-		 */
-		public void setVersion(String version) {
-			this.version = version;
-		}
-		/**
-		 * @param release the release to set
-		 */
-		public void setRelease(String release) {
-			this.release = release;
-		}
-		/**
-		 * @param targetLayerName the targetLayerName to set
-		 */
-		public void setTargetLayerName(String targetLayerName) {
-			this.targetLayerName = targetLayerName;
-		}
-		/**
-		 * @param loadUserName the loadUserName to set
-		 */
-		public void setLoadUserName(String loadUserName) {
-			this.loadUserName = loadUserName;
-		}
-		/* (non-Javadoc)
-		 * @see java.lang.Object#toString()
-		 */
-		@Override
-		public String toString() {
-			return "Context [version=" + version + ", release=" + release
-					+ ", targetLayerName=" + targetLayerName
-					+ ", loadUserName=" + loadUserName + "]";
-		}
-		
-		
-		
 	}
 	
-	
-	public QueryGeneratorForSurrogationUsage(SurrogationUsage srgUsg, Context ctx) {
-		this.srgUsg=srgUsg;
-		this.ctx=ctx;
+	public QueryGeneratorForSurrogationUsage(SurrogationUsage srgUsg) {
+		this(srgUsg,null);
 	}
 	
 
@@ -125,8 +51,8 @@ public class QueryGeneratorForSurrogationUsage implements IQueryGenerator {
 	@Override
 	public List<Map<String, List<Object>>> generateQueries() {
 		StringBuilder rsp=new StringBuilder();
-		String tablePrefix=((ctx.getSchemaName()!=null) && (!"".equals(ctx.getSchemaName())) )? ctx.getSchemaName()+".":"";
-		rsp.append("UPDATE ").append(tablePrefix).append("CMT_MAPPING_LINE");
+		String tablePrefix=((schemaName!=null) && (!"".equals(schemaName)) )? schemaName+".":"";
+		rsp.append("UPDATE ").append(tablePrefix).append(tableName);
 		rsp.append(" SET expression=?");
 		rsp.append(" WHERE mapping_name=?");
 		rsp.append(" AND release_cd=?");
@@ -139,12 +65,12 @@ public class QueryGeneratorForSurrogationUsage implements IQueryGenerator {
 		List<Object> params=new ArrayList<Object>();
 		params.add(generateMappingExpresssion());
 		params.add(srgUsg.getMappingLine().getName());
-		params.add(ctx.getRelease());
-		params.add(ctx.getVersion());
-		params.add(ctx.getTargetLayerName());
+		params.add(srgUsg.getMappingLine().getVersionInfo().getRelease());
+		params.add(srgUsg.getMappingLine().getVersionInfo().getVersion());
+		params.add(srgUsg.getMappingLine().getTrgTable().getLayerName());
 		params.add(srgUsg.getMappingLine().getTrgTable().getName());
 		params.add(srgUsg.getMappingLine().getTrgColumn().getName());
-		params.add(ctx.getLoadUserName());
+		params.add(srgUsg.getMappingLine().getVersionInfo().getLoadUserName());
 		
 		Map<String,List<Object>> query=new HashMap<String,List<Object>>();
 		query.put(rsp.toString(),params);

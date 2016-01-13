@@ -1,3 +1,4 @@
 rootProject.name = 'bita-master';
 includeFlat "model";
 includeFlat "surrogation-scripts";
+includeFlat "smart-deploy"

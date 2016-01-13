@@ -2,9 +2,11 @@ package ro.bcr.bita.model.decorator
 
 import ro.bcr.bita.model.ColumnPath;
 import ro.bcr.bita.model.ConnectionDetails;
+import ro.bcr.bita.model.MappingLine
 import ro.bcr.bita.model.ModelFactory
 import ro.bcr.bita.model.ModelFactoryTest
 import ro.bcr.bita.model.SurrogationUsage
+import ro.bcr.bita.model.TableDefinition
 import ro.bcr.bita.model.decorator.QueryGeneratorForSurrogationUsage;
 import ro.ns.test.support.groovy.HSQLInfrastructureProvider;
 
@@ -23,7 +25,7 @@ import static org.hamcrest.Matchers.*;
 
 class QueryGeneratorForSurrogationUsageIntTest {
 
-			private static final String ORIG_EXPRESSION = "ALO1"
+	private static final String ORIG_EXPRESSION = "ALO1"
 	
 	private static JdbcDatabaseTester tester;
 	private static Sql sql;
@@ -48,14 +50,16 @@ class QueryGeneratorForSurrogationUsageIntTest {
 
 	private static final String MAPPING_NAME = "test-mapping-name";
 	
+	private static final String MAPPING_LINE_TABLE="CMT_MAPPING_LINE";
+	
 	
 	@BeforeClass
 	public static void beforeClass() {
 		infrastructureProvider=HSQLInfrastructureProvider.createProvider();
 		sql=infrastructureProvider.createSqlGroovyObject();
-		sql.execute("""
-			drop table CMT_MAPPING_LINE if exists;
-			create table CMT_MAPPING_LINE(
+		GString query="""
+			drop table ${MAPPING_LINE_TABLE} if exists;
+			create table ${MAPPING_LINE_TABLE}(
 				"RELEASE_CD" VARCHAR2(50 BYTE) NOT NULL, 
 				"DWH_VERSION_CD" VARCHAR2(50 BYTE) NOT NULL, 
 				"MAPPING_NAME" VARCHAR2(250 BYTE) NOT NULL, 
@@ -75,7 +79,10 @@ class QueryGeneratorForSurrogationUsageIntTest {
 				PRIMARY KEY ("RELEASE_CD", "DWH_VERSION_CD", "MAPPING_NAME", "TARGET_LAYER_NAME", "TARGET_TABLE_NAME", "TARGET_COLUMN_NAME", "LD_USR")
 			);
 
-		""");
+		""";
+		
+		String parsedQuery=query.toString();
+		sql.execute(parsedQuery);
 	
 		tester = infrastructureProvider.createJdbcDatabaseTester();
 		connectionConfig=(new ModelFactoryTest()).createConnectionObject();
@@ -83,16 +90,25 @@ class QueryGeneratorForSurrogationUsageIntTest {
 		connectionConfig.setJdbcUser(infrastructureProvider.getJdbcUser());
 		connectionConfig.setJdbcPassword(infrastructureProvider.getJdbcPassword());
 			
-		srgUsg=factory.createSurrogationUsage(factory.createMappingLine(MAPPING_NAME),factory.createSurrogationDefinition("test-srg-def"));
-		QueryGeneratorForSurrogationUsage.Context ctx=new QueryGeneratorForSurrogationUsage.Context();
-		ctx.setLoadUserName(USER);
-		ctx.setRelease(RELEASE);
-		ctx.setVersion(VERSION);
-		ctx.setSchemaName("");
-		ctx.setTargetLayerName(LAYER);
-		srgUsg.getMappingLine().getTrgTable().setName(TARGET_TABLE);
-		srgUsg.getMappingLine().getTrgColumn().setName(TARGET_COLUMN);
-		subject=new QueryGeneratorForSurrogationUsage(srgUsg, ctx);
+		MappingLine mL=factory.createMappingLine(MAPPING_NAME);
+		
+		mL.getVersionInfo().setLoadUserName(USER);
+		mL.getVersionInfo().setRelease(RELEASE);
+		mL.getVersionInfo().setVersion(VERSION);
+		
+		mL.getTrgTable().setLayerName(LAYER);
+		mL.getTrgTable().setName(TARGET_TABLE);
+		mL.getTrgColumn().setName(TARGET_COLUMN);
+		
+		
+		srgUsg=factory.createSurrogationUsage(mL,factory.createSurrogationDefinition("test-srg-def"));
+	
+		TableDefinition targetTableDefinitionForQuery=factory.createTableDefinition()
+		targetTableDefinitionForQuery.setSchemaName("");
+		targetTableDefinitionForQuery.setName(MAPPING_LINE_TABLE);
+		
+		
+		subject=new QueryGeneratorForSurrogationUsage(srgUsg, targetTableDefinitionForQuery);
 	}
 	
 	@Before

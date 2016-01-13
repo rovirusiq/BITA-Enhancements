@@ -3,6 +3,7 @@ package ro.bcr.bita.model.decorator
 import ro.bcr.bita.model.ColumnPath
 import ro.bcr.bita.model.ModelFactoryTest;
 import ro.bcr.bita.model.SurrogationUsage;
+import ro.bcr.bita.model.TableDefinition
 import ro.bcr.bita.model.decorator.QueryGeneratorForSurrogationUsage;
 
 import org.hamcrest.Matchers
@@ -22,7 +23,8 @@ class QueryGeneratorForSurrogationUsageUnitTest {
 	private SurrogationUsage srgUsg;
 	private QueryGeneratorForSurrogationUsage subject;
 	
-	private static QueryGeneratorForSurrogationUsage.Context ctx;
+	private static TableDefinition targetTableForQuery;
+	
 	private static ModelFactoryTest factory=new ModelFactoryTest();
 
 	private static final String SCHEMA_FOR_GENERATED_QUERY = "DUMMY_SCHEMA"
@@ -47,8 +49,10 @@ class QueryGeneratorForSurrogationUsageUnitTest {
 
 	private static final String JOIN_NAME = "KK";
 	
-	private static final String RETURNED_QUERY="UPDATE ${SCHEMA_FOR_GENERATED_QUERY}.CMT_MAPPING_LINE SET expression=? WHERE mapping_name=? AND release_cd=? AND dwh_version_cd=? AND target_layer_name=? AND target_table_name=? AND target_column_name=? AND ld_usr=?";
-	private static final String RETURNED_QUERY_WITHOUT_SCHEMA="UPDATE CMT_MAPPING_LINE SET expression=? WHERE mapping_name=? AND release_cd=? AND dwh_version_cd=? AND target_layer_name=? AND target_table_name=? AND target_column_name=? AND ld_usr=?";
+	private static final String MAPPING_LINE_TABLE="CMT_MAPPING_LINE";
+	
+	private static final String RETURNED_QUERY="UPDATE ${SCHEMA_FOR_GENERATED_QUERY}.${MAPPING_LINE_TABLE} SET expression=? WHERE mapping_name=? AND release_cd=? AND dwh_version_cd=? AND target_layer_name=? AND target_table_name=? AND target_column_name=? AND ld_usr=?";
+	private static final String RETURNED_QUERY_WITHOUT_SCHEMA="UPDATE ${MAPPING_LINE_TABLE} SET expression=? WHERE mapping_name=? AND release_cd=? AND dwh_version_cd=? AND target_layer_name=? AND target_table_name=? AND target_column_name=? AND ld_usr=?";
 	
 	@Rule public TestName name=new TestName();
 	
@@ -57,12 +61,8 @@ class QueryGeneratorForSurrogationUsageUnitTest {
 	
 	@BeforeClass
 	public static void beforeClass() {
-		ctx=new QueryGeneratorForSurrogationUsage.Context();
-		ctx.setSchemaName(SCHEMA_FOR_GENERATED_QUERY);
-		ctx.setTargetLayerName(LAYER);
-		ctx.setVersion(VERSION);
-		ctx.setRelease(RELEASE);
-		ctx.setLoadUserName(USER);
+		targetTableForQuery=factory.createTableDefinition(MAPPING_LINE_TABLE);
+		targetTableForQuery.setSchemaName(SCHEMA_FOR_GENERATED_QUERY);
 	}
 	
 	private ColumnPath createColumnPathWithConstant(String expr) {
@@ -90,14 +90,25 @@ class QueryGeneratorForSurrogationUsageUnitTest {
 		
 		srgUsg.getMappingLine().getTrgTable().setName(MAPPING_TABLE);
 		srgUsg.getMappingLine().getTrgColumn().setName(MAPPING_COLUMN);
-		subject=new QueryGeneratorForSurrogationUsage(srgUsg,ctx);
-	}
-	
-	@After
-	public void afterTest() {
-		if (name.getMethodName().equals("emptySchemaNameShouldBeTreated")) {
-			ctx.setSchemaName(SCHEMA_FOR_GENERATED_QUERY);
+		
+		srgUsg.getMappingLine().getTrgTable().setLayerName(LAYER);
+		
+		srgUsg.getMappingLine().getVersionInfo().setVersion(VERSION);
+		srgUsg.getMappingLine().getVersionInfo().setRelease(RELEASE);
+		srgUsg.getMappingLine().getVersionInfo().setLoadUserName(USER);		
+		
+		if (name.getMethodName().equals("emptySchemaNameShouldBeTreated1")) {
+			TableDefinition tbl=factory.createTableDefinition(MAPPING_LINE_TABLE);
+			tbl.setSchemaName("");
+			subject=new QueryGeneratorForSurrogationUsage(srgUsg,tbl);
+		} else if (name.getMethodName().equals("emptySchemaNameShouldBeTreated2")) {
+			TableDefinition tbl=factory.createTableDefinition(MAPPING_LINE_TABLE);
+			tbl.setSchemaName(null);
+			subject=new QueryGeneratorForSurrogationUsage(srgUsg,tbl);
+		} else {
+			subject=new QueryGeneratorForSurrogationUsage(srgUsg,targetTableForQuery);
 		}
+		
 	}
 	
 	@Test
@@ -134,14 +145,19 @@ class QueryGeneratorForSurrogationUsageUnitTest {
 	}
 	
 	@Test
-	public void emptySchemaNameShouldBeTreated() {
-		//empty String
-		ctx.setSchemaName("");
+	public void emptySchemaNameShouldBeTreated1() {
 		def lst=subject.generateQueries();
 		assertThat(lst[0],hasKey(equalTo(RETURNED_QUERY_WITHOUT_SCHEMA)));
 		
-		//null value
-		ctx.setSchemaName(null);
+		lst=subject.generateQueries();
+		assertThat(lst[0],hasKey(equalTo(RETURNED_QUERY_WITHOUT_SCHEMA)));
+	}
+	
+	@Test
+	public void emptySchemaNameShouldBeTreated2() {
+		def lst=subject.generateQueries();
+		assertThat(lst[0],hasKey(equalTo(RETURNED_QUERY_WITHOUT_SCHEMA)));
+		
 		lst=subject.generateQueries();
 		assertThat(lst[0],hasKey(equalTo(RETURNED_QUERY_WITHOUT_SCHEMA)));
 	}

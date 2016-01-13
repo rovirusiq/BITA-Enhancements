@@ -1,27 +1,79 @@
 apply plugin: 'distribution'
 
-evaluationDependsOn ":model"
-evaluationDependsOn ":surrogation-scripts"
-
 allprojects{
 	version="1.0";
+	apply plugin:'java'
+	apply plugin:'jacoco'
+	ext{
+		prefixFromMasterProject="bitae-";
+		sfl4jVersion="1.7.12";
+		groovyVersion="2.4.4";
+		junitVersion="4.12";
+		hamcrestVersion="1.3";
+		dbUnitVersion="2.5.1";
+		hsqldbVersion="2.3.3";
+	}
+	repositories {
+		jcenter()
+	}
+	task createFolders{
+		doLast{
+			//todo - allow for additional technologies as parameters
+			def listOfPlugins=['java','groovy']
+			listOfPlugins=listOfPlugins.findAll {p->project.getPluginManager().hasPlugin(p)}
+			def listOfFolders=listOfPlugins.collect{p->
+				def returnedElement=[]
+				returnedElement<<project.sourceSets.collect{sSet->[sSet[p].srcDirs,sSet.resources.srcDirs]}
+				returnedElement
+			}
+			listOfFolders=listOfFolders.flatten().toSet();
+			listOfFolders.each{dir->
+				if (!dir.exists()){
+					if (!dir.mkdirs()){
+						throw new RuntimeException("Cannot create directory: ["+dir.getAbsolutePath()+"]");
+					}
+				}
+			}
+		}
+	}
+	jacocoTestReport.dependsOn test
 }
 
 distributions{
 	main{
 		contents{
-			from project(':model').tasks['jar'].outputs
-			from project(':surrogation-scripts').tasks['jar'].outputs
+			from project.subprojects*.configurations.archives.artifacts.files
 		}
 	}
 }
 
 task testReport(type: TestReport) {
+	evaluationDependsOnChildren()
 	destinationDir = file("$buildDir/reports/allTests")
 	// Include the results from the `test` task in all subprojects
 	def lst=subprojects*.tasks.test
 	reportOn lst
 }
 
+jacocoTestReport{
+	evaluationDependsOnChildren()
+	
+	//excludes the data form the current project
+	executionData=executionData.minus files(project.test.jacoco.destinationFile)
+	
+	//gather all tasks from the childre projects
+	subprojects*.tasks.each{taskContainer->
+		executionData taskContainer
+	}
+	//adds the sources
+	subprojects*.sourceSets*.main{sSet->
+		sourceSets sSet
+	}
+	//set output directory for report
+	reports.html.destination "${buildDir}/reports/jacoco/html"
+}
+
+
 
 assemble.dependsOn testReport
+assemble.dependsOn jacocoTestReport

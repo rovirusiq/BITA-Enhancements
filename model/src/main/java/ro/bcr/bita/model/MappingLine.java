@@ -7,6 +7,7 @@ public class MappingLine {
 	private ColumnDefinition trgColumn=new ColumnDefinition();
 	private String expression="";
 	private String surrogationExpression="";
+	private VersionInfo versionInfo=new VersionInfo();
 	/**
 	 * @param name
 	 */
@@ -77,4 +78,14 @@ public class MappingLine {
 	public void setSurrogationExpression(String surrogationExpression) {
 		this.surrogationExpression = surrogationExpression;
 	}
+
+
+	/**
+	 * @return the versionInfo
+	 */
+	public VersionInfo getVersionInfo() {
+		return versionInfo;
+	}
+	
+	
 }

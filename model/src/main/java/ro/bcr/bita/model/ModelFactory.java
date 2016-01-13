@@ -26,5 +26,7 @@ public class ModelFactory{
 		return new ColumnPath();
 	}
 	
-
+	public TableDefinition createTableDefinition(String name) {
+		return new TableDefinition(name);
+	}
 }

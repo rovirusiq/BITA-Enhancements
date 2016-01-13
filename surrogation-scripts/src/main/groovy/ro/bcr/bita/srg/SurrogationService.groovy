@@ -9,14 +9,26 @@ import ro.bcr.bita.model.MappingLine;
 import ro.bcr.bita.model.ModelFactory;
 import ro.bcr.bita.model.SurrogationDefinition
 import ro.bcr.bita.model.SurrogationUsage
+import ro.bcr.bita.model.TableDefinition
 import ro.bcr.bita.model.decorator.JdbcConnectionDetails;
 
 public class SurrogationService {
 	
 	private JdbcConnectionDetails connectionDetails;
+	private String schemaName="";
+	private String tableName='TC_0PD_ML';
+	
+	public SurrogationService(JdbcConnectionDetails connection,TableDefinition sourceTable) {
+		this.connectionDetails=connection;
+		if (sourceTable!=null) {
+			this.schemaName=sourceTable.getSchemaName();
+			this.tableName=sourceTable.getName();
+		}
+	}
 	
 	public SurrogationService(JdbcConnectionDetails connection) {
-		this.connectionDetails=connection;
+		this(connection,null);
+		
 	}
 		
 	private Sql createSqlInstance() {
@@ -80,7 +92,12 @@ public class SurrogationService {
 	def parseSurrogationExpressions(Closure additionalFilterOnMappingLineRow= CLS_NO_FILTER, Closure additionalFilterOnSurrogationUsageObject=CLS_NO_FILTER) {
 		def rsp=[];
 		Sql sql=createSqlInstance();
-		sql.eachRow("select mapping_name,target_table,target_column,surrogation_expression from TEMP_TABLE"){row->
+		String querySchemaString="$schemaName.";
+		if ( (null==schemaName) || ("".equals(schemaName))){
+			querySchemaString="";
+		}
+		def query="select mapping_name,target_table_name,target_column_name,surrogation_expression,release_cd,dwh_version_cd,target_layer_name,ld_usr from ${querySchemaString}${tableName}";
+		sql.eachRow(query.toString()){row->
 				String srgExprString=(String)row[3];
 				if (additionalFilterOnMappingLineRow(row)) {	
 					Matcher m=extractMatcherFromSurrogationExpression(srgExprString);
@@ -93,6 +110,10 @@ public class SurrogationService {
 						mL.setSurrogationExpression(srgExprString);
 						mL.getTrgTable().setName(row[1]);
 						mL.getTrgColumn().setName(row[2]);
+						mL.getTrgTable().setLayerName(row[6]);
+						mL.getVersionInfo().setRelease(row[4]);
+						mL.getVersionInfo().setVersion(row[5]);
+						mL.getVersionInfo().setLoadUserName(row[7]);
 						
 						sU.setDesiredKey(m[0][1]);
 						if (m[0].size()>3) {

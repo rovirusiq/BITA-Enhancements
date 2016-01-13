@@ -8,6 +8,7 @@ import ro.bcr.bita.srg.SurrogationService;
 import ro.ns.test.support.groovy.HSQLInfrastructureProvider;
 
 import java.sql.SQLRecoverableException;
+import java.text.CollationElementIterator;
 
 import groovy.sql.Sql;
 
@@ -35,7 +36,10 @@ class SurogationServiceIntTest {
 	private static Sql sql;
 	private static ConnectionDetails connectionConfig;
 	private static HSQLInfrastructureProvider infrastructureProvider;
-		
+	private static ModelFactoryTest factory=new ModelFactoryTest();
+	
+	private static String SOURCE_TABLE="tc_opd_ml";
+	
 	
 	private SurrogationService subject;
 	
@@ -54,19 +58,26 @@ class SurogationServiceIntTest {
 	public static void beforeClass() {
 		infrastructureProvider=HSQLInfrastructureProvider.createProvider();
 		sql=infrastructureProvider.createSqlGroovyObject();
-		sql.execute("""
-			drop table if exists temp_table;
-			create table temp_table(
+		
+		def query="""
+			drop table if exists ${SOURCE_TABLE};
+			create table ${SOURCE_TABLE}(
 				mapping_name varchar2(500),
-				target_table varchar2(30),
-				target_column varchar2(30),
-				surrogation_expression varchar2(2000)
+				target_table_name varchar2(30),
+				target_column_name varchar2(30),
+				surrogation_expression varchar2(2000),
+				release_cd varchar2(100),
+				dwh_version_cd varchar2(100),
+				target_layer_name varchar2(100),
+				ld_usr varchar2(100)
 			);
 
-		""");
+		""";
+		
+		sql.execute(query.toString());
 	
 		tester = infrastructureProvider.createJdbcDatabaseTester();
-		connectionConfig=(new ModelFactoryTest()).createConnectionObject();
+		connectionConfig=factory.createConnectionObject();
 		connectionConfig.setJdbcConnectionString(infrastructureProvider.getJdbcConnectionString());
 		connectionConfig.setJdbcUser(infrastructureProvider.getJdbcUser());
 		connectionConfig.setJdbcPassword(infrastructureProvider.getJdbcPassword());
@@ -81,7 +92,7 @@ class SurogationServiceIntTest {
 
 	@Before
 	public void beforeEachTest() {
-		subject=new SurrogationService(new JdbcConnectionDetails(connectionConfig));
+		subject=new SurrogationService(new JdbcConnectionDetails(connectionConfig),factory.createTableDefinition(SOURCE_TABLE));
 	}
 	
 	@After
@@ -93,8 +104,8 @@ class SurogationServiceIntTest {
 	@Test
 	public void extractWithoutFilterShouldReturnAllRecordsFromTheTable() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		//check number of valid records
@@ -108,10 +119,10 @@ class SurogationServiceIntTest {
 	@Test
 	public void extractWithoutFilterShouldReturnAllRecordsFromTheTablEvenIfTheListIsNotASet() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
 			//add row identical with the first
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		//check number of valid records
@@ -125,9 +136,9 @@ class SurogationServiceIntTest {
 	@Test
 	public void extractWithFilterShouldReturnOnlyTheIdentifiedRecords() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
-			temp_table mapping_name:"MPL3", target_table:"TABLE3", target_column:"COLUMN3", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_CAU',LC_HR_ENTITY.ENT_ID | 'Number of employees2']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
+			tc_opd_ml mapping_name:"MPL3", target_table_name:"TABLE3", target_column_name:"COLUMN3", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_CAU',LC_HR_ENTITY.ENT_ID | 'Number of employees2']";
 		}
 		int contor=0;
 		def lst=subject.parseSurrogationExpressions{it-> contor++;(contor!=2)};
@@ -140,10 +151,10 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldReturnOnlyValidSurrogationExpressions() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
-			temp_table mapping_name:"MPL4", target_table:"TABLE4", target_column:"COLUMN4", surrogation_expression:"SRG.NK['LC_HR_ENTITY_4_AU' LC_HR_ENTITY.ENT_ID | 'Number of employees']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
-			temp_table mapping_name:"MPL3", target_table:"TABLE3", target_column:"COLUMN3", surrogation_expression:"SRG.NKXXXX";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL4", target_table_name:"TABLE4", target_column_name:"COLUMN4", surrogation_expression:"SRG.NK['LC_HR_ENTITY_4_AU' LC_HR_ENTITY.ENT_ID | 'Number of employees']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_BAU',LC_HR_ENTITY.ENT_ID | LC_HT_ENTITY.OTH_FIELD]";
+			tc_opd_ml mapping_name:"MPL3", target_table_name:"TABLE3", target_column_name:"COLUMN3", surrogation_expression:"SRG.NKXXXX";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(2));//valid indexes from initial dataset:0,2
@@ -154,14 +165,14 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldIgnoreSurrogationUsageWithInvalidAdditionalDetails() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',-LC_HR_ENTITY.ENT_ID]";
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY]";
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.]";
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU','LC_HR_ENTITY]";//missing '
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY[LJOIN:CEVA]";//missing ]
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[DEF]";//missing joinType
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[LJOIN]";//missing joinName
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[CJOIN:DEF]";//incorrect joinName
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',-LC_HR_ENTITY.ENT_ID]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU','LC_HR_ENTITY]";//missing '
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY[LJOIN:CEVA]";//missing ]
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[DEF]";//missing joinType
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[LJOIN]";//missing joinName
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.CEVA[CJOIN:DEF]";//incorrect joinName
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(0));
@@ -170,7 +181,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails1() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -181,7 +192,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails2() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU','CEVA']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU','CEVA']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -191,7 +202,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails3() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[JOIN:DEF]]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[JOIN:DEF]]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -204,7 +215,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails4() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[LJOIN:DEF]]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[LJOIN:DEF]]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -217,7 +228,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails5() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[RJOIN:DEF]]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[RJOIN:DEF]]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -230,7 +241,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails6() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]]";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]]";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -243,7 +254,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails7() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -257,8 +268,8 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails8() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(2));
@@ -301,11 +312,11 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetailsCheckWithSimpleCount() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
-			temp_table mapping_name:"MPL3", target_table:"TABLE3", target_column:"COLUMN3", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_AU','CUTU']";
-			temp_table mapping_name:"MPL4", target_table:"TABLE4", target_column:"COLUMN4", surrogation_expression:"SRG.NK['LC_HR_ENTITY_4_AU',AAA.BBB]";
-			temp_table mapping_name:"MPL5", target_table:"TABLE5", target_column:"COLUMN5", surrogation_expression:"SRG.NK['LC_HR_ENTITY_5_AU',AAA.BBB|CCC.DDD | EEEE.DDDD[RJOIN:VVVV]|'CVB']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
+			tc_opd_ml mapping_name:"MPL3", target_table_name:"TABLE3", target_column_name:"COLUMN3", surrogation_expression:"SRG.NK['LC_HR_ENTITY_3_AU','CUTU']";
+			tc_opd_ml mapping_name:"MPL4", target_table_name:"TABLE4", target_column_name:"COLUMN4", surrogation_expression:"SRG.NK['LC_HR_ENTITY_4_AU',AAA.BBB]";
+			tc_opd_ml mapping_name:"MPL5", target_table_name:"TABLE5", target_column_name:"COLUMN5", surrogation_expression:"SRG.NK['LC_HR_ENTITY_5_AU',AAA.BBB|CCC.DDD | EEEE.DDDD[RJOIN:VVVV]|'CVB']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(5));
@@ -314,8 +325,8 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldApplyCorrectlyTheDefaultFilterBasedOnSurrogationUsageObject() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(2));
@@ -324,8 +335,8 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldApplyCorrectlyTheProvidedFilterBasedOnSurrogationUsageObject() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
-			temp_table mapping_name:"MPL2", target_table:"TABLE2", target_column:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_1_AU',LC_HR_ENTITY.ENT_ID[XJOIN:DEF]|'CUTU']";
+			tc_opd_ml mapping_name:"MPL2", target_table_name:"TABLE2", target_column_name:"COLUMN2", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',AAA.BBB[JOIN:AOLEU]|CCC.DDD | 'MIMI']";
 		}
 		def lst=subject.parseSurrogationExpressions(subject.CLS_NO_FILTER,{su->(su.getPaths().size()!=3)});//should eliminate the second one
 		assertThat(lst.size(),equalTo(1));
@@ -335,7 +346,7 @@ class SurogationServiceIntTest {
 	@Test
 	public void parseShouldAcceptSurrogationUsageWithValidAdditionalDetails_WithoutJoin() {
 		infrastructureProvider.createInitialDatbaseState(tester){
-			temp_table mapping_name:"MPL1", target_table:"TABLE1", target_column:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID|'CUTU']";
+			tc_opd_ml mapping_name:"MPL1", target_table_name:"TABLE1", target_column_name:"COLUMN1", surrogation_expression:"SRG.NK['LC_HR_ENTITY_2_AU',LC_HR_ENTITY.ENT_ID|'CUTU']";
 		}
 		def lst=subject.parseSurrogationExpressions();
 		assertThat(lst.size(),equalTo(1));
@@ -345,5 +356,6 @@ class SurogationServiceIntTest {
 		Matcher isJoinNameCorrect=hasProperty("joinName",nullValue());
 		Matcher isConstantCorrect=hasProperty("constantExpression",equalTo("CUTU"));
 		assertThat(lst[0].getPaths(),containsInAnyOrder(allOf(isTableNameCorrect,isColumnNameCorrect,isJoinTypeCorrect,isJoinNameCorrect),isConstantCorrect));
+
 	}
 }

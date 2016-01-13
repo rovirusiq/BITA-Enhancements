@@ -1,13 +1,8 @@
 apply plugin: 'java';
 apply plugin: 'groovy';
 apply plugin: 'eclipse';
-apply plugin: 'jacoco';
 
 archivesBaseName="bcr-bita-srg";
-
-repositories {
-     jcenter();
-}
 
 sourceSets{
 	main{
@@ -41,9 +36,3 @@ dependencies {
 	testCompile  project(path:":model",configuration:"archives");
 	testRuntime 'org.hsqldb:hsqldb:+'
 }
-
-jacoco {
-	toolVersion = "0.7.1.201405082137"
-}
-
-

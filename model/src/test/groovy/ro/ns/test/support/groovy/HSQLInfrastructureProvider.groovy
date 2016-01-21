@@ -15,8 +15,7 @@ public class HSQLInfrastructureProvider {
 	private final String RUNTIME_CONNECTION_DRIVER;
 	private final List<String> RUNTIME_CONNECTION_PROPS;
 	
-	
-	public static class Builder{
+	private static class Builder{
 		public HSQLInfrastructureProvider build() {
 			return HSQLInfrastructureProvider.createProvider();
 		}
@@ -62,7 +61,6 @@ public class HSQLInfrastructureProvider {
 	public void clearDatbaseState(IDatabaseTester tester) {
 		tester.onTearDown();
 	}
-	
 	
 	
 	public static final createProvider() {

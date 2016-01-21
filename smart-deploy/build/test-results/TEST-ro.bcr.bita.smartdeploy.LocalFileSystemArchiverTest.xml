@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2016-01-21T16:27:59" hostname="APOPOVICI" time="0.72">
+  <properties/>
+  <testcase name="whenFolderNeedsToBeCreatedTheNameIsIdentifiedCorrectly_1" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.124"/>
+  <testcase name="whenFolderNeedsToBeCreatedTheNameIsIdentifiedCorrectly_2" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.0"/>
+  <testcase name="whenFolderNeedsToBeCreatedTheNameIsIdentifiedCorrectly_3" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.267"/>
+  <testcase name="whenParameterThatIsNotAFolderShoudThrowIllegalArgumentException" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.265"/>
+  <testcase name="whenFilesAreArchivedTheyShouldBeMovedIntheArchiveFolder_1" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.032"/>
+  <testcase name="whenFilesAreArchivedTheyShouldBeMovedIntheArchiveFolder_2" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.016"/>
+  <testcase name="whenArchiveFolderDoesNotExistsThenItMustBeCreated" classname="ro.bcr.bita.smartdeploy.LocalFileSystemArchiverTest" time="0.016"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

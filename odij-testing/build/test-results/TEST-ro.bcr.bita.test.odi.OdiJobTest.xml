@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="ro.bcr.bita.test.odi.OdiJobTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2016-01-21T16:27:57" hostname="APOPOVICI" time="0.453">
+  <properties/>
+  <testcase name="firstTest" classname="ro.bcr.bita.test.odi.OdiJobTest" time="0.453"/>
+  <system-out><![CDATA[===STABLE1=====================
+[ID:1.00000000000000000000000000000000, DESC:Record 1]
+[ID:2.00000000000000000000000000000000, DESC:Record 2]
+[ID:3.00000000000000000000000000000000, DESC:Record 3]
+===============================
+===TTABLEA=====================
+===============================
+->Executing job
+->Job was Executed
+===TTABLEA AFTER JOB=============
+[ID:1.00000000000000000000000000000000, DESC:Record 1, UPD_DT:2016-01-21 18:27:57.0]
+[ID:2.00000000000000000000000000000000, DESC:Record 2, UPD_DT:2016-01-21 18:27:57.0]
+[ID:3.00000000000000000000000000000000, DESC:Record 3, UPD_DT:2016-01-21 18:27:57.0]
+===============================
+]]></system-out>
+  <system-err><![CDATA[SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+]]></system-err>
+</testsuite>

@@ -9,6 +9,7 @@ apply plugin: 'eclipse'
 
 archivesBaseName=prefixFromMasterProject+"smart-deploy";
 
+
 sourceSets{
 	main{
 		groovy{
@@ -29,8 +30,14 @@ sourceSets{
 }
 
 dependencies {
+	
     compile "org.slf4j:slf4j-api:${sfl4jVersion}"
 	compile "org.codehaus.groovy:groovy-all:${groovyVersion}";
+	compile "org.eclipse.persistence:org.eclipse.persistence.jpa:+";
+	
+	compile files('../../../Java-Libs/oracle/ojdbc6.jar');
+	compile files('../../../Java-Libs/odi-dependencies/oracle.odi-sdk-jse_12.1.3.jar');
+	
 	
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"

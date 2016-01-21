@@ -7,16 +7,16 @@ allprojects{
 	ext{
 		prefixFromMasterProject="bitae-";
 		sfl4jVersion="1.7.12";
-		groovyVersion="2.4.4";
+		groovyVersion="2.1.6";
 		junitVersion="4.12";
 		hamcrestVersion="1.3";
 		dbUnitVersion="2.5.1";
 		hsqldbVersion="2.3.3";
 	}
 	repositories {
-		jcenter()
+		jcenter();
 	}
-	task createFolders{
+	task createProjectSkeleton{
 		doLast{
 			//todo - allow for additional technologies as parameters
 			def listOfPlugins=['java','groovy']

@@ -1,13 +1,8 @@
-import java.nio.charset.Charset.ExtendedProviderHolder;
+apply plugin: 'java';
+apply plugin: 'groovy';
+apply plugin: 'eclipse';
 
-import groovy.time.BaseDuration.From;
-
-apply plugin: 'java'
-apply plugin: 'groovy'
-apply plugin: 'eclipse'
-
-
-archivesBaseName=prefixFromMasterProject+"model";
+archivesBaseName=prefixFromMasterProject+"srg";
 
 sourceSets{
 	main{
@@ -28,13 +23,16 @@ sourceSets{
 	}
 }
 
-
 dependencies {
-    compile "org.slf4j:slf4j-api:${sfl4jVersion}"
+	compile "org.slf4j:slf4j-api:${sfl4jVersion}"
 	compile "org.codehaus.groovy:groovy-all:${groovyVersion}";
+	compile project(":model");
 	
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
 	testCompile "org.dbunit:dbunit:${dbUnitVersion}"
+	testCompile  project(path:":test-support");
+	
 	testRuntime "org.hsqldb:hsqldb:${hsqldbVersion}"
+	
 }

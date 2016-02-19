@@ -7,13 +7,13 @@ apply plugin: 'groovy'
 apply plugin: 'eclipse'
 
 
-archivesBaseName=prefixFromMasterProject+"smart-deploy";
-
 ext{
 	odiSdkRelativePath="../../../Java-Libs/odi-dependencies/12.1.3";
 	oracleRelativePath="../../../Java-Libs/oracle";
+	odiSdkDepenList="";
 }
 
+archivesBaseName=prefixFromMasterProject+"odijob";
 
 sourceSets{
 	main{
@@ -34,20 +34,42 @@ sourceSets{
 	}
 }
 
+task myPlay{
+	doLast{
+		def a=fileTree(odiSdkRelativePath);
+		a.exclude "Lib/**";
+		odiSdkDepenList="./Lib/";
+		a.visit{visit->;
+			odiSdkDepenList+=" "+visit.getRelativePath();
+		};
+	}
+}
+
+task odiSdkJar(type:Jar) {
+	baseName="odi-sdk-dependencies"
+	version="12.1.3";
+	dependsOn myPlay;
+	doFirst{
+		manifest{
+			attributes("Implementation-Title":"Odi-Sdk-Dependencies"
+				,"Class-Path":odiSdkDepenList);
+		}
+	}
+}
+
+
 dependencies {
-	
     compile "org.slf4j:slf4j-api:${sfl4jVersion}"
 	compile "org.codehaus.groovy:groovy-all:${groovyVersion}";
-	compile "org.eclipse.persistence:org.eclipse.persistence.jpa:+";
-	
+
 	compile files("${oracleRelativePath}/ojdbc7.jar");
 	compile files("${odiSdkRelativePath}/odi-sdk-dependencies-12.1.3.jar");
-	
-	compile project(":model");
-	
+	compile project(':smart-deploy');
 	
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
 	testCompile "org.dbunit:dbunit:${dbUnitVersion}"
-	testRuntime "org.hsqldb:hsqldb:${hsqldbVersion}"
-}
+	testCompile  project(":test-support");
+	
+	
+	testRuntime "org.hsqldb:hsqldb:${hsqldbVersion}"}

@@ -7,13 +7,7 @@ apply plugin: 'groovy'
 apply plugin: 'eclipse'
 
 
-archivesBaseName=prefixFromMasterProject+"smart-deploy";
-
-ext{
-	odiSdkRelativePath="../../../Java-Libs/odi-dependencies/12.1.3";
-	oracleRelativePath="../../../Java-Libs/oracle";
-}
-
+archivesBaseName=prefixFromMasterProject+"test-model";
 
 sourceSets{
 	main{
@@ -35,19 +29,15 @@ sourceSets{
 }
 
 dependencies {
-	
     compile "org.slf4j:slf4j-api:${sfl4jVersion}"
 	compile "org.codehaus.groovy:groovy-all:${groovyVersion}";
-	compile "org.eclipse.persistence:org.eclipse.persistence.jpa:+";
-	
-	compile files("${oracleRelativePath}/ojdbc7.jar");
-	compile files("${odiSdkRelativePath}/odi-sdk-dependencies-12.1.3.jar");
-	
-	compile project(":model");
-	
+	compile "org.dbunit:dbunit:${dbUnitVersion}";
+	compile "org.hsqldb:hsqldb:${hsqldbVersion}";
 	
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
-	testCompile "org.dbunit:dbunit:${dbUnitVersion}"
-	testRuntime "org.hsqldb:hsqldb:${hsqldbVersion}"
+	testCompile project(":model")
+	testCompile project(path:":test-support",configuration:"archives")
+	
+	
 }

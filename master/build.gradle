@@ -1,5 +1,31 @@
 apply plugin: 'distribution'
 
+/*
+ * High-level idea:
+ * Configure all the projects with:
+ * 		- properites for java libraries versions used
+ * 		- the repositories
+ * 		- add a task to create the ProjectSkeleton (TODO: create a plugin)
+ * 		- create an explicti dependency between jacocoTestReport and test. In this way when jacocoTestReport is run the test task is automatically run
+ * 
+ * Configuration for the master
+ * 		- take care of distributions
+ * 			- the main one (the default) will contain all the jars for each distributable project
+ * 			- the allDist configuration will contain the artifact for all the sources (one jar)
+ * 		- in extenson namespace create different list with projects. Filter the projects and obtain different list of projects for different type of tasks
+ * 		- a new task of Type Jar for the distribution with one jar for all files
+ * 		- create a master jacocoTestReport taht will take into account the relevant executionData and the relevant sourceSets (the relevant list are configured in the 'ext' namespace)
+ * 		- create dependency between assemble and jacocoTestReport
+ * 
+ * 
+ * IMPORTANT FOR DEBUGGING:
+ * 	- jacocoTestReport it does not execute properly if an execution data file is missing (you will see that is skipped)
+ * 	- jacoco is modifynt the test task of each project and ataches to it and generates the executionData when the test task is run
+ * 	- jacocoTestReport uses the executionData to generate report. It also needs to be aware of the sources for which the execution data is generated
+ * 
+ */
+
+
 allprojects{
 	version="1.0";
 	apply plugin:'java'
@@ -39,10 +65,43 @@ allprojects{
 	jacocoTestReport.dependsOn test
 }
 
+//Only Master project
+configurations{
+	allDist
+}
+
+
+ext{
+	//logic to obtain a list of projects for which the artifacts are included in the distribution
+	skippedProjectsJars=[project(":test-model"),project(":test-support"),project(":mappings")];
+	projectsInDistribution=project.subprojects-skippedProjectsJars;
+	//logic to identify all the classes and resources that are to be included in the jar
+	filesInAllJar=project.configurations.allDist.artifacts.files;
+	//projects from which to gather jacocoTestReport
+	jacocoExecutionData=[project(":smart-deploy"),project(":surrogation"),project(":test-model")];
+	jacocoSourceData=[project(":smart-deploy"),project(":surrogation"),project(":model")];
+}
+
+task allJar(type:Jar) {
+	baseName=prefixFromMasterProject+"all";
+	from projectsInDistribution*.sourceSets['main'].output
+}
+
+artifacts{
+	allDist allJar
+}
+
 distributions{
 	main{
 		contents{
-			from project.subprojects*.configurations.archives.artifacts.files
+			baseName=prefixFromMasterProject+"separate-files";
+			from projectsInDistribution*.configurations.archives.artifacts.files
+		}
+	}
+	allInOne{
+		contents{
+			baseName=prefixFromMasterProject+"one-file";
+			from filesInAllJar;
 		}
 	}
 }
@@ -58,15 +117,16 @@ task testReport(type: TestReport) {
 jacocoTestReport{
 	evaluationDependsOnChildren()
 	
+	//gather all tasks from the childre projects
+	jacocoExecutionData*.tasks.each{taskContainer->
+		executionData taskContainer
+	}
+	
 	//excludes the data form the current project
 	executionData=executionData.minus files(project.test.jacoco.destinationFile)
 	
-	//gather all tasks from the childre projects
-	subprojects*.tasks.each{taskContainer->
-		executionData taskContainer
-	}
 	//adds the sources
-	subprojects*.sourceSets*.main{sSet->
+	jacocoExecutionData*.sourceSets*.main.each{sSet->
 		sourceSets sSet
 	}
 	//set output directory for report
@@ -77,3 +137,7 @@ jacocoTestReport{
 
 assemble.dependsOn testReport
 assemble.dependsOn jacocoTestReport
+projectsInDistribution*.jacocoTestReport.each{jacocoTask->
+	rootProject.jacocoTestReport.dependsOn jacocoTask
+}
+

@@ -1,5 +1,10 @@
-package ro.bcr.bita.test.odi
-
+package ro.bcr.bita.test.demo
+/*
+ * Demo class
+ * Uses HSQLDB as database.
+ * It does not call a ODI mapping
+ * It just demonstrates the principle
+ */
 import ro.ns.test.infrastructure.HSQLInfrastructureProvider;
 
 import groovy.sql.Sql;

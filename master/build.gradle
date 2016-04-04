@@ -45,6 +45,7 @@ allprojects{
 	task createProjectSkeleton{
 		doLast{
 			//todo - allow for additional technologies as parameters
+			//todo - create .gitignorefile
 			def listOfPlugins=['java','groovy']
 			listOfPlugins=listOfPlugins.findAll {p->project.getPluginManager().hasPlugin(p)}
 			def listOfFolders=listOfPlugins.collect{p->
@@ -73,7 +74,7 @@ configurations{
 
 ext{
 	//logic to obtain a list of projects for which the artifacts are included in the distribution
-	skippedProjectsJars=[project(":test-model"),project(":test-support"),project(":mappings")];
+	skippedProjectsJars=[project(":test-model"),project(":test-support"),/*project(":mappings")*/];
 	projectsInDistribution=project.subprojects-skippedProjectsJars;
 	//logic to identify all the classes and resources that are to be included in the jar
 	filesInAllJar=project.configurations.allDist.artifacts.files;

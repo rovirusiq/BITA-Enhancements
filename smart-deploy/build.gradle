@@ -49,5 +49,8 @@ dependencies {
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"
 	testCompile "org.dbunit:dbunit:${dbUnitVersion}"
+	testCompile "org.spockframework:spock-core:1.0-groovy-2.0";
+	testCompile "cglib:cglib-nodep:2.2";
+	testCompile "org.objenesis:objenesis:1.2";
 	testRuntime "org.hsqldb:hsqldb:${hsqldbVersion}"
 }

@@ -1,5 +1,7 @@
-package ro.bcr.bita.test.odi
-
+package ro.bcr.bita.test.demo
+/*
+ * Simulates an ODI job
+ */
 import groovy.sql.Sql
 
 import ro.ns.test.infrastructure.HSQLInfrastructureProvider;

@@ -1,4 +1,4 @@
-package ro.bcr.bita.utils
+package ro.bcr.bita.utils;
 
 import groovy.lang.Closure;
 import oracle.odi.core.OdiInstance
@@ -12,6 +12,7 @@ import oracle.odi.core.persistence.transaction.support.DefaultTransactionDefinit
 import oracle.odi.core.security.Authentication
 import ro.bcr.bita.model.JdbcDriverList
 
+@Deprecated
 class OdiTemplate implements IOdiTemplate{
 	
 	

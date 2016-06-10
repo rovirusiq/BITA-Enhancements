@@ -1,5 +1,3 @@
-import groovy.transform.Field
-
 evaluate(ro.bcr.bita.odi.script.BitaScriptEnv.baseScript());
 
 def String messageFromMyScript="Message From MyScript";

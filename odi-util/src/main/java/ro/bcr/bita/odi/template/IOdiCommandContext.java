@@ -1,32 +1,31 @@
 package ro.bcr.bita.odi.template;
 
-import java.util.List;
-import java.util.Map;
+import ro.bcr.bita.model.IOdiMapping;
+import ro.bcr.bita.model.IOdiScenario;
 
-import oracle.odi.domain.mapping.Mapping;
+import java.util.List;
+
 import oracle.odi.domain.mapping.finder.IMappingFinder;
 import oracle.odi.domain.project.finder.IOdiFolderFinder;
 import oracle.odi.domain.project.finder.IOdiProjectFinder;
-import oracle.odi.domain.runtime.scenario.OdiScenario;
 import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFinder;
+import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFolderFinder;
 
 
 public interface IOdiCommandContext {
 	
-	public final String SCENARIO_VERSION_BITA="001";
-	public final String SCENARIO_VERSION_TEST="999";
-	
-	public IMappingFinder getMappingFinder();
-	public IOdiProjectFinder getProjectFinder();
-	public IOdiFolderFinder getFolderFinder();
-	public IOdiScenarioFinder getScenarioFinder();
+	public IMappingFinder getMappingFinder() throws OdiTemplateException;
+	public IOdiProjectFinder getProjectFinder() throws OdiTemplateException;
+	public abstract IOdiFolderFinder getProjectFolderFinder() throws OdiTemplateException;
+	public IOdiScenarioFinder getScenarioFinder() throws OdiTemplateException;
+	public IOdiScenarioFolderFinder getScenarioFolderFinder() throws OdiTemplateException;
 
-	public List<Mapping> findMappings(String projectCode,String folderName);
-	public List<Mapping> findMappings(Map<String,String> param);
-	public List<Mapping> findMappings(String projectCode);
+	public List<IOdiMapping> findMappings(String... odiPaths) throws OdiTemplateException;
 	
-	public OdiScenario findScenarioForMapping(Mapping map,String version);
-	public OdiScenario findBitaScenarioForMapping(Mapping map);
-	public OdiScenario findTestScenarioForMapping(Mapping map);
+	public IOdiScenario findScenarioForMapping(IOdiMapping map,String version) throws OdiTemplateException;
+	public IOdiScenario findBitaScenarioForMapping(IOdiMapping map) throws OdiTemplateException;
+	public IOdiScenario findTestScenarioForMapping(IOdiMapping map) throws OdiTemplateException;
+
+	
 	
 }

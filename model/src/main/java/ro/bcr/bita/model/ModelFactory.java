@@ -18,9 +18,7 @@ public class ModelFactory{
 	public MappingLine createMappingLine(String name) {
 		return new MappingLine(name);
 	}
-	public SurrogationDefinition createSurrogationDefinition(String name) {
-		return new SurrogationDefinition(name);
-	}
+	
 	
 	public ColumnPath createColumnPath() {
 		return new ColumnPath();
@@ -28,5 +26,13 @@ public class ModelFactory{
 	
 	public TableDefinition createTableDefinition(String name) {
 		return new TableDefinition(name);
+	}
+	
+	public SurrogationDefinition createSurrogationDefinition(String name) {
+		return new SurrogationDefinition(name);
+	}
+	
+	public SurrogationDefinition createExtendedSurrogationDefinition(String name) {
+		return new SurrogationExtendedDefinition(name);
 	}
 }

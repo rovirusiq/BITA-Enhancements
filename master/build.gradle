@@ -20,14 +20,14 @@ apply plugin: 'distribution'
  * 
  * IMPORTANT FOR DEBUGGING:
  * 	- jacocoTestReport it does not execute properly if an execution data file is missing (you will see that is skipped)
- * 	- jacoco is modifynt the test task of each project and ataches to it and generates the executionData when the test task is run
+ * 	- jacoco is modifing the test task of each project and ataches to it and generates the executionData when the test task is run
  * 	- jacocoTestReport uses the executionData to generate report. It also needs to be aware of the sources for which the execution data is generated
  * 
  */
 
 
 allprojects{
-	version="1.0";
+	version="1.1-RC1";
 	apply plugin:'java'
 	apply plugin:'jacoco'
 	ext{
@@ -83,11 +83,16 @@ ext{
 	jacocoSourceData=[project(":smart-deploy"),project(":surrogation"),project(":model")];
 }
 
+
+
+
 task allJar(type:Jar) {
-	baseName=prefixFromMasterProject+"all";
-	from projectsInDistribution*.sourceSets['main'].output
+	baseName=prefixFromMasterProject+"all";	
+	from projectsInDistribution*.sourceSets['main'].output;
 }
 
+//TODO - sa vad daca pot sa creez folderul separat si sa il adaug basescriptul
+//TODO - sa vad daca pot sa exclud fisierul din aces build. Cred ca este in functie de cum se evalueaza proiectele
 artifacts{
 	allDist allJar
 }

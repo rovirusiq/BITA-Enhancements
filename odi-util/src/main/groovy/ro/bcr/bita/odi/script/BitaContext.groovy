@@ -1,9 +1,10 @@
 package ro.bcr.bita.odi.script
 
 import ro.bcr.bita.common.ComposedDelegator
-import ro.bcr.bita.odi.template.IOdiBasicCommand;
-import ro.bcr.bita.odi.template.IOdiCommandContext;
-import ro.bcr.bita.odi.template.OdiBasicTemplate;
+import ro.bcr.bita.model.MessageCollectionContainer
+import ro.bcr.bita.odi.template.IOdiBasicCommand
+import ro.bcr.bita.odi.template.IOdiCommandContext
+import ro.bcr.bita.odi.template.OdiBasicTemplate
 
 /********************************************************************************************
  *

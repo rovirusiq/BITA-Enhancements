@@ -1,10 +1,11 @@
 package ro.bcr.bita.model
 
-import java.util.List
-import java.util.Set;
 
 //TODO more detailed exception about Cyclic dependencies detected
 class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicAware {
+	
+	
+	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();
 	
 	private class MDREntry{
 		private String name;//name of the table
@@ -14,6 +15,7 @@ class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicA
 	
 	
 	private HashMap<String,MDREntry> repo=[:];
+	
 	
 	private MDREntry getByKey(String tableName) {
 		MDREntry v=this.repo.get(tableName);
@@ -46,7 +48,7 @@ class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicA
 			
 			for (String consumerMapping:v.sourceFor) {
 				for (String producerMapping:v.targetFor) {
-					deps << new MappingDependency(consumerMapping,producerMapping);
+					deps << bitaModelFactory.newMappingDependency(consumerMapping,producerMapping);
 				}
 			}
 
@@ -65,7 +67,7 @@ class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicA
 			if (lstCyclic.get(key)==null) {
 				lstCyclic.put(key,it);
 			} else {
-				faulty<<it;
+				faulty << it;
 			}
 			
 		};

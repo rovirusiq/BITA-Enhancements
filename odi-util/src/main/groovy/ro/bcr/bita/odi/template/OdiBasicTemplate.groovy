@@ -1,50 +1,30 @@
 package ro.bcr.bita.odi.template
 
 import ro.bcr.bita.model.JdbcDriverList;
-import groovy.lang.Closure;
-import oracle.odi.core.OdiInstance
-import oracle.odi.core.config.MasterRepositoryDbInfo
-import oracle.odi.core.config.OdiInstanceConfig
-import oracle.odi.core.config.PoolingAttributes
-import oracle.odi.core.config.WorkRepositoryDbInfo
+import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaModelFactory
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
+import ro.bcr.bita.odi.proxy.OdiEntityFactory
+
 import oracle.odi.core.persistence.transaction.ITransactionDefinition
 import oracle.odi.core.persistence.transaction.ITransactionManager
 import oracle.odi.core.persistence.transaction.ITransactionStatus
-import oracle.odi.core.persistence.transaction.support.DefaultTransactionDefinition
-import oracle.odi.core.security.Authentication
-import oracle.odi.domain.mapping.Mapping;
-import oracle.odi.domain.mapping.finder.IMappingFinder;
-import oracle.odi.domain.project.finder.IOdiFolderFinder;
-import oracle.odi.domain.project.finder.IOdiProjectFinder;
-import oracle.odi.domain.runtime.scenario.OdiScenario;
-import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFinder;
-
-import ro.bcr.bita.model.JdbcDriverList
-import ro.bcr.bita.odi.template.IOdiBasicCommand;
-import ro.bcr.bita.odi.template.IOdiBasicTemplate;
-import ro.bcr.bita.odi.template.IOdiCommandContext;
-import ro.bcr.bita.odi.template.OdiBasicTemplate;
-import ro.bcr.bita.odi.template.OdiTemplateException;
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory;
-import ro.bcr.bita.proxy.odi.OdiEntityFactory;
-
-import java.util.List;
-import java.util.Map;
-
-import bsh.This;
 
 
 class OdiBasicTemplate implements IOdiBasicTemplate{
 	
 	private IOdiEntityFactory odiEntityFactory;
+	private IBitaModelFactory bitaModelFactory;
 	
-	public OdiBasicTemplate(IOdiEntityFactory odiEntityFactory) throws OdiTemplateException{
+	public OdiBasicTemplate(IOdiEntityFactory odiEntityFactory,IBitaModelFactory bitaModelFactory) throws OdiTemplateException{
 		if (odiEntityFactory==null) throw new OdiTemplateException("The constructor argument odiEntityfactory for the OdiBasicTemplate cannot be null");
-		this.odiEntityFactory=odiEntityFactory;		
+		if (bitaModelFactory==null) throw new OdiTemplateException("The constructor argument bitaModelFactory for the OdiBasicTemplate cannot be null");
+		this.odiEntityFactory=odiEntityFactory;
+		this.bitaModelFactory=bitaModelFactory;	
 	}
 	
 	private IOdiCommandContext createNewContext() {
-		return new OdiCommandContext(this.odiEntityFactory);
+		return this.bitaModelFactory.newOdiTemplateCommandContext(this.odiEntityFactory);
 	}
 
 	private void executeCommand(IOdiBasicCommand cmd,Boolean inTransaction) throws OdiTemplateException{
@@ -52,16 +32,22 @@ class OdiBasicTemplate implements IOdiBasicTemplate{
 		ITransactionManager tm;
 		ITransactionStatus txnStatus;
 		try {
-			if (inTransaction) {
-				txnDef = this.odiEntityFactory.createDefaultTransactionDefinition();
-				tm =  this.odiEntityFactory.getTransactionManager();
-				txnStatus = this.odiEntityFactory.createTransactionStatus(tm,txnDef);
-			}
+			/*
+			 * If you do not start a transaction you cannot manage the persistence context
+			 * This creates memory consumption if you do very long operations
+			 * That is way everything has a transaction, just that the one 
+			 * that are supposed NOT to execute in transaction get a clear() before 
+			 */
+			txnDef = this.odiEntityFactory.createDefaultTransactionDefinition();
+			tm =  this.odiEntityFactory.getTransactionManager();
+			txnStatus = this.odiEntityFactory.createTransactionStatus(tm,txnDef);
 			
 			cmd.execute(createNewContext());
-			if (inTransaction) {
-				tm.commit(txnStatus)
+			
+			if (!inTransaction) {
+				((OdiEntityFactory)this.odiEntityFactory).getOdiInstance().getTransactionalEntityManager().clear();
 			}
+			tm.commit(txnStatus);
 		} catch (Exception ex) {
 			throw new OdiTemplateException("An exception has occured while executing the ODI command",ex);
 		} finally {

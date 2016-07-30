@@ -1,5 +1,8 @@
 package ro.bcr.bita.model
 
+import groovy.transform.TypeChecked;
+
+@TypeChecked
 class MappingDependency implements IDependency<String, String>,ICyclicDependencyAware{
 	
 	private String dependentMapping;
@@ -46,7 +49,7 @@ class MappingDependency implements IDependency<String, String>,ICyclicDependency
 			
 			String partial=(result1<result2)? result1+":"+result2:result2+":"+result1;
 			
-			int actorHashCode=MappingDependencyActor.MAPPING.value().hashCode();
+			int actorHashCode=DependencyActor.MAPPING.value().hashCode();
 			
 			this.cyclicIdentifier=actorHashCode+":"+actorHashCode+":"+partial;
 		}

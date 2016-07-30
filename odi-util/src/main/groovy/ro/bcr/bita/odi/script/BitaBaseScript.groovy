@@ -1,13 +1,11 @@
 package ro.bcr.bita.odi.script;
+import ro.bcr.bita.model.BitaModelFactory;
+import ro.bcr.bita.odi.proxy.OdiEntityFactory;
+import ro.bcr.bita.odi.template.OdiBasicTemplate
+
 import groovy.transform.Field
 
-import java.util.logging.*;
-
-import ro.bcr.bita.common.ComposedDelegator
-import ro.bcr.bita.odi.template.IOdiBasicCommand
-import ro.bcr.bita.odi.template.IOdiCommandContext
-import ro.bcr.bita.odi.template.OdiBasicTemplate
-import ro.bcr.bita.proxy.odi.OdiEntityFactory;
+import java.util.logging.*
 
 
 //TODO To add standard finders: mapFinder, projectFinder, folderFinder,scenarioFinder,scenFolderFinder. Either in context either as global variables
@@ -25,7 +23,7 @@ class BitaBaseScript extends Script{
 			def OdiBasicTemplate odiTemplate;
 			
 			if (binding.hasVariable("odiInstance")) {
-				odiTemplate=new OdiBasicTemplate(new OdiEntityFactory(odiInstance));
+				odiTemplate=new OdiBasicTemplate(new OdiEntityFactory(odiInstance),new BitaModelFactory());
 			}
 			
 		

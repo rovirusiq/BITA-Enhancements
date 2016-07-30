@@ -1,11 +1,15 @@
 package ro.bcr.bita.odi.script
 
+import ro.bcr.bita.model.IMessageCollectionContainer;
+import ro.bcr.bita.model.MessageCollection;
+import ro.bcr.bita.model.MessageCollectionContainer;
+
 import spock.lang.Specification
 
 class MessageCollectionContainerScriptHelperTest extends Specification{
 		
 		private MessageCollectionContainerScriptHelper subject;
-		private MessageCollectionContainer msgC;
+		private IMessageCollectionContainer msgC;
 		
 		def setup() {
 			msgC=new MessageCollectionContainer();

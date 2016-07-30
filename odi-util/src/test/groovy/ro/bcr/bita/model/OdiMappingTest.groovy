@@ -13,7 +13,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 		odiObject=Mock();
 	}
 	
-	def "when the constructor parameter is null, an exception is thrown"(){
+	def "Constructor - when the constructor parameter is null, an exception is thrown"(){
 		given:	"""The objects from the setup method"""
 		when:	"The object is constructed with null parameter"
 				subject=new OdiMapping(null);
@@ -21,7 +21,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 				thrown BitaModelException;
 	}
 	
-	def "when a simple interface method is used, it is delegated directly to the odi object"(){
+	def "Delegation - when a simple interface method is used, it is delegated directly to the odi object"(){
 		given:	"""The objects from the setup method"""
 				def cutu=3;
 				def nbr;
@@ -34,7 +34,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 				nbr==cutu;
 	}
 	
-	def "when an non-existing interface method is used, it is delegated directly to the odi object"(){
+	def "Delegation - an non-existing interface method is used, it is delegated directly to the odi object"(){
 		given:	"""The objects from the setup method"""
 				def cutu=3;
 				def nbr;
@@ -47,7 +47,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 	}
 	
 	
-	def "when no SOURCE is present, an exception is thrown"(){
+	def "Identify Sources - when no SOURCE is present, an exception is thrown"(){
 		given:	"""The objects from the setup method"""				
 				def nd1=BITA_MOCK_ODI_PN(
 					"IS_DATA_STORE":Boolean.TRUE
@@ -67,7 +67,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 				ex.message.startsWith("No source table was");
 	}
 	
-	def "when no TARGET is present, an exception is thrown"(){
+	def "Identify Sources - when no TARGET is present, an exception is thrown"(){
 		given:	"""The objects from the setup method"""
 				def nd1=BITA_MOCK_ODI_PN(
 					"IS_DATA_STORE":Boolean.TRUE
@@ -88,7 +88,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 	}
 	
 	
-	def "when MULTIPLE targets are identified , an exception is thrown"(){
+	def "Identify Sources - when MULTIPLE targets are identified , an exception is thrown"(){
 		given:	"""The objects from the setup method"""
 				def nd1=BITA_MOCK_ODI_PN(
 					"IS_DATA_STORE":Boolean.TRUE
@@ -115,7 +115,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 				ex.message.startsWith("More than one target");
 	}
 	
-	def "when mapping is analyzed, source and targets are correclty identified"(){
+	def "Identify Sources -when mapping is analyzed, source and targets are correclty identified"(){
 		
 		given:	"""The objects from the setup method"""
 				def nd1=BITA_MOCK_ODI_PN(
@@ -159,7 +159,7 @@ class OdiMappingTest extends BitaMockModelFactory{
 					,"UPSTREAM_NODES":[3]
 					,"DOWNSTREAM_NODES":[5]
 				);
-	
+			
 				odiObject=BITA_MOCK_ODI_MAPPING nd1,nd2,nd3,nd4,nd5,nd6;
 				
 				

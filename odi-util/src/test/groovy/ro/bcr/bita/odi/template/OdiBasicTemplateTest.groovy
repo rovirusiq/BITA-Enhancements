@@ -1,26 +1,25 @@
 package ro.bcr.bita.odi.template;
 
-import ro.bcr.bita.odi.template.IOdiBasicCommand;
-import ro.bcr.bita.odi.template.IOdiCommandContext;
-import ro.bcr.bita.odi.template.OdiBasicTemplate;
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory
-import ro.bcr.bita.proxy.odi.OdiEntityFactory;
+import ro.bcr.bita.model.BitaModelFactoryForTesting;
+import ro.bcr.bita.model.IBitaModelFactory;
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
 
-import oracle.odi.core.OdiInstance
-import oracle.odi.core.persistence.transaction.ITransactionDefinition;
+import spock.lang.Specification
+import oracle.odi.core.persistence.transaction.ITransactionDefinition
 import oracle.odi.core.persistence.transaction.ITransactionManager
 import oracle.odi.core.persistence.transaction.ITransactionStatus
-import spock.lang.Specification;
 
 class OdiBasicTemplateTest extends Specification{
 	
-	def IOdiEntityFactory mOdiEntityFactory;
-	def ITransactionManager mTxManager;
-	def ITransactionStatus mTxStatus;
-	def ITransactionDefinition mTxDefinition;
-	def IOdiBasicCommand mCommand;
+	IOdiEntityFactory mOdiEntityFactory;
+	ITransactionManager mTxManager;
+	ITransactionStatus mTxStatus;
+	ITransactionDefinition mTxDefinition;
+	IOdiBasicCommand mCommand;
+	IBitaModelFactory bitaModelFactory;
 	
 	def setup() {
+		bitaModelFactory=new BitaModelFactoryForTesting();
 		mOdiEntityFactory=Mock();
 		mTxManager=Mock();
 		mTxStatus=Mock();
@@ -34,7 +33,7 @@ class OdiBasicTemplateTest extends Specification{
 			
 			
 		when:  "a command is executed without Odi Transaction"
-			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory);
+			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory,bitaModelFactory);
 			odiTmpl.executeInTransaction(mCommand);
 			
 		then: "no trasaction related interactions, only the execute method on the command object"
@@ -53,7 +52,7 @@ class OdiBasicTemplateTest extends Specification{
 				The objects are created in the setup method"""
 			
 		when: "A command is executed without Odi Transaction"
-			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory);
+			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory,bitaModelFactory);
 			odiTmpl.executeWithoutTransaction(mCommand);
 			
 		then: "no trasaction related interactions, only the execute method on the command object"
@@ -66,7 +65,18 @@ class OdiBasicTemplateTest extends Specification{
 		given:
 			OdiBasicTemplate odiTmpl;
 		when: 'try to construct the OdiTemplate object'
-			odiTmpl=new OdiBasicTemplate(null);
+			odiTmpl=new OdiBasicTemplate(null,bitaModelFactory);
+		then: "OdiTemplateException is expected"
+			thrown OdiTemplateException;
+			
+			
+	}
+	
+	def "when constructor parameter bitaModelFactory is null, an OdiTemplateException is thrown"(){
+		given:
+			OdiBasicTemplate odiTmpl;
+		when: 'try to construct the OdiTemplate object'
+			odiTmpl=new OdiBasicTemplate(mOdiEntityFactory,null);
 		then: "OdiTemplateException is expected"
 			thrown OdiTemplateException;
 			
@@ -79,7 +89,7 @@ class OdiBasicTemplateTest extends Specification{
 			def contextReceived;
 		when: "The OdiTemplate is build and you execute a command"
 			contextReceived=null;
-			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory);
+			OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mOdiEntityFactory,bitaModelFactory);
 			odiTmpl.executeWithoutTransaction(mCommand);
 		then: "In the command you have acces to the OdiComandContext"
 			1 * mCommand.execute(_ as IOdiCommandContext) >> {arg-> contextReceived=arg[0];};

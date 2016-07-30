@@ -1,18 +1,24 @@
 package ro.bcr.bita.model
 
+import groovy.transform.CompileStatic;
+import groovy.transform.TypeChecked;
+
 import java.io.Serializable;
 import java.util.List
+
 import oracle.odi.domain.mapping.IMapComponent
 import oracle.odi.domain.mapping.Mapping
 import oracle.odi.domain.mapping.physical.MapPhysicalNode
 
 //TODO sa adaug exceptiile la defintitia interfetei si a clasei
+@TypeChecked
 class OdiMapping implements IOdiMapping {
 	
 	
 	private boolean isAnalyzed=false;
 	private List<String> sourceTables=[];
 	private String targetTable;
+	private String leadingSource="XXX_DMY";
 	
 	
 	private @Delegate Mapping odiObject;
@@ -44,6 +50,12 @@ class OdiMapping implements IOdiMapping {
 	protected getTargetTable() {
 		return this.targetTable;
 	}
+	
+	protected void setLeadingSource(String leadingSource) {
+		this.leadingSource = leadingSource;
+	}
+	
+	
 	protected void analyze() throws BitaModelException {
 		if (this.isAnalyzed) return;
 		
@@ -61,11 +73,25 @@ class OdiMapping implements IOdiMapping {
 		  
 		  if (isDataStorage){
 		   
-			  if (isSource) this.addToSourceTables(lComponent.getBoundObjectName());
-		   
+			  String lName=lComponent.getBoundObjectName()
+			  
+			  if (isSource) {
+				  this.addToSourceTables(lName);
+				  String name2=lName;
+				  for (String x:["LZ_","LC_","TEMP_","ST_"]) {
+					  if (name2.indexOf(x)==0) {
+						  name2=name2-x;
+						  break;
+					  }
+				  }
+				  if (this.getName().indexOf(name2)==4) {
+					  this.setLeadingSource(lName);
+				  }
+				  
+			  }
 			  if (isTarget) {
 				  counterForTarget++;
-				  if (counterForTarget>1) throw new BitaModelException("More than one target have been identified for the mapping[${this.odiObject.name}]: ${this.getTargetTable()},${lComponent.getBoundObjectName()} ");
+				  if (counterForTarget>1) throw new BitaModelException("More than one target have been identified for the mapping[${this.getName()}]: ${this.getTargetTable()},${lComponent.getBoundObjectName()} ");
 				  this.setTargetTable(lComponent.getBoundObjectName());
 			  }
 		  
@@ -105,8 +131,26 @@ class OdiMapping implements IOdiMapping {
 	}
 	
 	@Override
+	public String getName() {
+		return odiObject.getName();
+	}
+	
+	@Override
 	public String toString() {
 		return """OdiMapping[${odiObject.getName()}]""";
 	}
+
+	@Override
+	public String getLeadingSource() {
+		return leadingSource;
+	}
+	public Mapping getUnderlyingOdiObject() {
+		return this.odiObject;
+	}
+
+
+	
+	
+	
 
 }

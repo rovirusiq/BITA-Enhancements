@@ -1,31 +1,29 @@
 package ro.bcr.bita.odi.template
 
+import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaModelFactory
 import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.IOdiScenario
-import ro.bcr.bita.model.OdiMapping
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory;
-import ro.bcr.bita.proxy.odi.IOdiProjectPaths;
-import ro.bcr.bita.proxy.odi.OdiPathUtil
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory
+import ro.bcr.bita.odi.proxy.IOdiProjectPaths
+import ro.bcr.bita.odi.proxy.OdiPathUtil
 
-import java.util.List;
-import java.util.Map;
-
-import oracle.odi.domain.mapping.Mapping;
-import oracle.odi.domain.mapping.finder.IMappingFinder;
-import oracle.odi.domain.project.OdiFolder
-import oracle.odi.domain.project.finder.IOdiFolderFinder;
-import oracle.odi.domain.project.finder.IOdiProjectFinder;
-import oracle.odi.domain.runtime.scenario.OdiScenario;
-import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFinder;
+import oracle.odi.domain.mapping.finder.IMappingFinder
+import oracle.odi.domain.project.finder.IOdiFolderFinder
+import oracle.odi.domain.project.finder.IOdiProjectFinder
+import oracle.odi.domain.runtime.scenario.OdiScenario
+import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFinder
 import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFolderFinder
 
 public  class OdiCommandContext implements IOdiCommandContext,IOdiMappingVersions{
 	private final IOdiEntityFactory odiEntityFactory;
 	private final OdiPathUtil odiPathUtils;
 	
-	private OdiCommandContext(IOdiEntityFactory odiEntityFactory) {
+	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();
+	
+	public OdiCommandContext(IOdiEntityFactory odiEntityFactory) {
 		this.odiEntityFactory=odiEntityFactory;
-		this.odiPathUtils=new OdiPathUtil(this.odiEntityFactory);
+		this.odiPathUtils=bitaModelFactory.newOdiPathUtil(odiEntityFactory);
 	}
 	
 	public getOdiEntityFactory() {
@@ -89,7 +87,7 @@ public  class OdiCommandContext implements IOdiCommandContext,IOdiMappingVersion
 				
 				for (String folder:rsp.getFoldersForProject(prj)) {
 				
-					mps << (finder.findByProject(prj,folder).collect{new OdiMapping(it)});
+					mps << (finder.findByProject(prj,folder).collect{bitaModelFactory.newOdiMapping(it)});
 				}
 			}
 			

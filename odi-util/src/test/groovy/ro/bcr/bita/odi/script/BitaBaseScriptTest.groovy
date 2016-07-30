@@ -1,20 +1,12 @@
 package ro.bcr.bita.odi.script;
 
-import java.nio.file.*;
+import spock.lang.Specification
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.ForEach;
+import java.nio.file.*
 
 import oracle.odi.core.OdiInstance
-import oracle.odi.core.persistence.transaction.ITransactionDefinition
-import oracle.odi.core.persistence.transaction.ITransactionManager;
-import oracle.odi.core.persistence.transaction.ITransactionStatus;
-
-import ro.bcr.bita.common.ComposedDelegator
-import ro.bcr.bita.odi.template.IOdiBasicCommand;
-import ro.bcr.bita.odi.template.IOdiCommandContext
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory;
-
-import spock.lang.Specification
+import oracle.odi.core.persistence.transaction.ITransactionManager
+import oracle.odi.core.persistence.transaction.ITransactionStatus
 
 
 
@@ -30,7 +22,7 @@ class BitaBaseScriptTest extends Specification{
 		mTxStatus=Mock();
 	}
 	
-	def "Chekc Binding usage from a BITA Script"(){
+	def "Check Binding usage from a BITA Script"(){
 		
 		given: "The defined script"
 				String scriptContent="""

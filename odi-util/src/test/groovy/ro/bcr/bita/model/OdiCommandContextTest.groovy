@@ -1,14 +1,11 @@
 package ro.bcr.bita.model
 
-import oracle.odi.domain.mapping.Mapping;
+import ro.bcr.bita.odi.template.OdiCommandContext
+import ro.bcr.bita.odi.template.OdiTemplateException
+
+import oracle.odi.domain.mapping.Mapping
 import oracle.odi.domain.mapping.finder.IMappingFinder
-
-import ro.bcr.bita.model.IOdiMapping
-import ro.bcr.bita.odi.template.OdiCommandContext;
-import ro.bcr.bita.odi.template.OdiTemplateException;
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory
-
-import spock.lang.Specification
+import oracle.odi.domain.project.OdiFolder
 
 class OdiCommandContextTest extends BitaMockModelFactory {
 	
@@ -31,7 +28,11 @@ class OdiCommandContextTest extends BitaMockModelFactory {
 	
 	def "Find Mappings - no mappings in ODI"(){
 		given:	"several prpjects with folders, but no mappings"
-				stbOdiFolderFinder.findByProject("PRJ_A") >> ["FOLDER_1","FOLDER_2"];
+		
+				OdiFolder f1=BITA_MOCK_ODI_FOLDER(NAME:"FOLDER_1");
+				OdiFolder f2=BITA_MOCK_ODI_FOLDER(NAME:"FOLDER_2");
+		
+				stbOdiFolderFinder.findByProject("PRJ_A") >> [f1,f2];
 				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_1") >> [];
 				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_2") >> [];
 				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_1") >> ["XXX"];

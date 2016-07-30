@@ -1,6 +1,7 @@
 package ro.bcr.bita.model
 
-import ro.bcr.bita.proxy.odi.IOdiEntityFactory
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
+
 import spock.lang.Specification
 import oracle.odi.domain.mapping.IMapComponent
 import oracle.odi.domain.mapping.MapComponentType
@@ -8,6 +9,7 @@ import oracle.odi.domain.mapping.Mapping
 import oracle.odi.domain.mapping.finder.IMappingFinder
 import oracle.odi.domain.mapping.physical.MapPhysicalDesign
 import oracle.odi.domain.mapping.physical.MapPhysicalNode
+import oracle.odi.domain.project.OdiFolder
 import oracle.odi.domain.project.finder.IOdiFolderFinder
 import oracle.odi.domain.project.finder.IOdiProjectFinder
 
@@ -37,6 +39,14 @@ class BitaMockModelFactory extends Specification{
 	 *Not exposed methods
 	 *
 	 ********************************************************************************************/
+	protected OdiFolder stubOdiFolder(MckCfgFolder config) {
+		OdiFolder fld=Stub();
+		
+		fld.getName() >> config.NAME;
+		
+		return fld;
+	}
+	
 	protected MapPhysicalNode stubOdiMappingPhysicalNode(MckCfgPhysicalNode config) {
 		MapPhysicalNode pn=Stub();
 		
@@ -74,16 +84,14 @@ class BitaMockModelFactory extends Specification{
 		odiObject.getName() >> config.NAME;
 		return odiObject;
 	}
-	protected Mapping stubOdiMapping(MckCfgPhysicalNode... nodes) {
+	protected Mapping stubOdiMapping(MapPhysicalNode... nodes) {
 		Mapping odiObject=Stub();
 		MapPhysicalDesign phyDsgn=Stub();
 		
 		odiObject.getPhysicalDesign(0) >> phyDsgn;
-		
-		def realNodes=nodes.collect{MckCfgPhysicalNode n-> return this.stubOdiMappingPhysicalNode(n)}
 
 		
-		phyDsgn.getPhysicalNodes() >> realNodes;
+		phyDsgn.getPhysicalNodes() >> nodes;
 		
 		return odiObject;
 	}
@@ -93,20 +101,25 @@ class BitaMockModelFactory extends Specification{
 	 *
 	 *
 	 ********************************************************************************************/
-	//TODO to review
-	protected MckCfgPhysicalNode BITA_MOCK_ODI_PN() {
-		return new MckCfgPhysicalNode()
+	//TODO analyze methofds signature because they all should return mocked objects
+	
+	protected OdiFolder BITA_MOCK_ODI_FOLDER(Map params) {
+		return this.stubOdiFolder(new MckCfgFolder(params));
 	}
 	
-	protected MckCfgPhysicalNode BITA_MOCK_ODI_PN(Map params) {
-		return new MckCfgPhysicalNode(params)
+	protected MapPhysicalNode BITA_MOCK_ODI_PN() {
+		return this.stubOdiMappingPhysicalNode(new MckCfgPhysicalNode())
 	}
 	
-	protected Mapping BITA_MOCK_ODI_MAPPING(MckCfgPhysicalNode... nodes) {
+	protected MapPhysicalNode BITA_MOCK_ODI_PN(Map params) {
+		return this.stubOdiMappingPhysicalNode(new MckCfgPhysicalNode(params));
+	}
+	
+	protected Mapping BITA_MOCK_ODI_MAPPING(MapPhysicalNode... nodes) {
 		return this.stubOdiMapping(nodes);
 	}
 	
-	protected Mapping BITA_MOCK_ODI_MAPPING(String name,MckCfgPhysicalNode... nodes) {
+	protected Mapping BITA_MOCK_ODI_MAPPING(String name,MapPhysicalNode... nodes) {
 		Mapping rsp=this.stubOdiMapping(nodes);
 		rsp.getName() >> name;
 		return rsp;

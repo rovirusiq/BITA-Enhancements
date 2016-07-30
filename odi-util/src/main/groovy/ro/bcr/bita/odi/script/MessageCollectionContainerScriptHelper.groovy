@@ -1,10 +1,12 @@
 package ro.bcr.bita.odi.script
 
+import ro.bcr.bita.model.IMessageCollectionContainer;
+
 class MessageCollectionContainerScriptHelper {
 	
-	@Delegate MessageCollectionContainer msgC;
+	@Delegate IMessageCollectionContainer msgC;
 	
-	public MessageCollectionContainerScriptHelper(MessageCollectionContainer wrapped){
+	public MessageCollectionContainerScriptHelper(IMessageCollectionContainer wrapped){
 		this.msgC=wrapped;
 	}
 	

@@ -43,8 +43,6 @@ dependencies {
 	compile files("${oracleRelativePath}/ojdbc7.jar");
 	compile files("${odiSdkRelativePath}/odi-sdk-dependencies-12.1.3.jar");
 	
-	compile project(":model");
-	
 	
 	testCompile "junit:junit:${junitVersion}"
 	testCompile "org.hamcrest:hamcrest-all:${hamcrestVersion}"

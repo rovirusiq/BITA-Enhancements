@@ -1,6 +1,8 @@
 package ro.bcr.bita.model
 
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
+import ro.bcr.bita.odi.proxy.OdiPathUtil
+import ro.bcr.bita.odi.proxy.OdiProjectPaths
 
 import spock.lang.Specification
 import oracle.odi.domain.mapping.IMapComponent
@@ -14,7 +16,7 @@ import oracle.odi.domain.project.finder.IOdiFolderFinder
 import oracle.odi.domain.project.finder.IOdiProjectFinder
 
 //TODO sa ma gandesc la un DSL mai frumos ca sa creeze PhysicalNodes
-class BitaMockModelFactory extends Specification{
+class BitaSpockSpecification extends Specification{
 	
 	
 	protected IOdiEntityFactory stbOdiEntityFactory;
@@ -24,6 +26,14 @@ class BitaMockModelFactory extends Specification{
 	
 	protected setup() {
 		stbOdiEntityFactory=Stub();
+		stbOdiEntityFactory.newOdiPathUtil() >> {
+			return new OdiPathUtil(stbOdiEntityFactory);
+		}
+		
+		stbOdiEntityFactory.newOdiProjectPaths(_ as Map)>> {Map x->
+			return new OdiProjectPaths(x);
+		}
+		
 		stbOdiMappingFinder=Stub();
 		stbOdiFolderFinder=Stub();
 		stbOdiProjectFinder=Stub();

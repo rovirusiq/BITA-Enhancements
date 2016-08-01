@@ -3,7 +3,7 @@ package ro.bcr.bita.odi.proxy
 import oracle.odi.domain.project.OdiFolder;
 import oracle.odi.domain.project.finder.IOdiFolderFinder
 
-import ro.bcr.bita.model.BitaMockModelFactory
+import ro.bcr.bita.model.BitaSpockSpecification
 import ro.bcr.bita.odi.proxy.BitaOdiException;
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
 import ro.bcr.bita.odi.proxy.IOdiProjectPaths;
@@ -12,21 +12,24 @@ import ro.bcr.bita.odi.proxy.OdiPathUtil;
 import spock.lang.Specification
 import spock.lang.Unroll;
 
-class OdiPathsUtilTest extends BitaMockModelFactory {
+class OdiPathsUtilTest extends BitaSpockSpecification {
 	
 	OdiPathUtil subject;
-	IOdiEntityFactory odiEntityFactory;
-	IOdiFolderFinder odiFolderFinder;
+	IOdiEntityFactory mOdiEntityFactory;
+	IOdiFolderFinder mOdiFolderFinder;
 	
 	def setup() {
 		
-		odiEntityFactory=Mock();
-		odiFolderFinder=Mock();
+		mOdiFolderFinder=Mock();
+		mOdiEntityFactory=Mock();
 		
-		odiEntityFactory.createProjectFolderFinder() >> odiFolderFinder;
+		mOdiEntityFactory.createProjectFolderFinder() >> mOdiFolderFinder;
 		
+		mOdiEntityFactory.newOdiProjectPaths(_ as Map)>> {Map x->
+			return new OdiProjectPaths(x);
+		}
 		
-		subject=new OdiPathUtil(odiEntityFactory);
+		subject=new OdiPathUtil(mOdiEntityFactory);
 	}
 	
 	
@@ -66,7 +69,7 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 	def "Retrieve folders from an ODI project with 0 folers"(){
 		given:	"a valid ODI project code for a project with 0 folders"
 				String projectCode="SMTH";
-				odiFolderFinder.findByProject(_)>>[];
+				mOdiFolderFinder.findByProject(_)>>[];
 		when:	"we try to extract the folders from it"
 				List lst=subject.getFoldersForProject(projectCode);
 		then:	"an empty list is returned and the odi folder was "
@@ -79,7 +82,7 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 				String projectCode="SMTH";
 				def fld1=BITA_MOCK_ODI_FOLDER(NAME:"FOLDER1");
 				def fld2=BITA_MOCK_ODI_FOLDER(NAME:"FOLDER2");
-				odiFolderFinder.findByProject(projectCode)>>[fld1,fld2];
+				mOdiFolderFinder.findByProject(projectCode)>>[fld1,fld2];
 		when:	"we try to extract the folders from it"
 				List lst=subject.getFoldersForProject(projectCode);
 		then:	"an empty list is returned and the odi folder was "
@@ -91,7 +94,7 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 	def "When retrieve folders from an ODI project an exception is thrown"(){
 		given:	"a valid ODI project code for a project with more than 1 folders"
 				String projectCode="SMTH";
-				odiFolderFinder.findByProject(_) >>{throw new RuntimeException("Fake Exception")}
+				mOdiFolderFinder.findByProject(_) >>{throw new RuntimeException("Fake Exception")}
 		when:	"we try to extract the folders from it"
 				List lst=subject.getFoldersForProject(projectCode);
 		then:	"an empty list is returned and the odi folder was "
@@ -141,9 +144,9 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 				OdiFolder fA=BITA_MOCK_ODI_FOLDER(NAME:"FA");
 				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
 				
-				odiFolderFinder.findByProject("PRJ1") >>[];
-				odiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
-				odiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 		when:	"we to add valid project paths to the map path"
 				subject.populateMapPaths(mapPaths,path1);
 				subject.populateMapPaths(mapPaths,path2);
@@ -169,9 +172,9 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 				OdiFolder fA=BITA_MOCK_ODI_FOLDER(NAME:"FA");
 				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
 		
-				odiFolderFinder.findByProject("PRJ1") >>[];
-				odiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
-				odiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"no parameter specifed as paths"
 				IOdiProjectPaths rsp=subject.extractProjectPaths();
@@ -189,9 +192,9 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 				OdiFolder fA=BITA_MOCK_ODI_FOLDER(NAME:"FA");
 				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
 		
-				odiFolderFinder.findByProject("PRJ1") >>[];
-				odiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
-				odiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"multile paths specified"
 				IOdiProjectPaths rsp=subject.extractProjectPaths(
@@ -225,9 +228,9 @@ class OdiPathsUtilTest extends BitaMockModelFactory {
 				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
 		
 		
-				odiFolderFinder.findByProject("PRJ1") >>[];
-				odiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
-				odiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"multile paths specified"
 				IOdiProjectPaths rsp=subject.extractProjectPaths(

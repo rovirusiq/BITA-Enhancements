@@ -1,7 +1,5 @@
 package ro.bcr.bita.service.mapping
 
-import ro.bcr.bita.model.BitaModelFactory;
-import ro.bcr.bita.model.BitaModelFactoryForTesting;
 import ro.bcr.bita.model.IMessageCollection;
 import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.MappingDependency;
@@ -13,7 +11,6 @@ import spock.lang.Specification
 class JcSqlGeneratorTest extends Specification{
 	
 	JcSqlGenerator subject;
-	BitaModelFactoryForTesting bitaModelFactory=new BitaModelFactoryForTesting();
 	JcAnalyzeProcessor processor;
 	MessageCollectionUtil msgCollUtl=new MessageCollectionUtil();
 	JcSqlGenerator.Parameters params;

@@ -10,4 +10,12 @@ import java.util.Set;
 
 class BitaModelFactoryForTesting extends BitaModelFactory {
 
+	protected BitaModelFactoryForTesting() {
+		
+	}
+	
+	public static IBitaModelFactory newInstance() {
+		return new BitaModelFactoryForTesting();
+	}
+	
 }

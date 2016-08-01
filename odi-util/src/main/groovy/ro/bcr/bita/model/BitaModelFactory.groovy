@@ -1,5 +1,6 @@
 package ro.bcr.bita.model;
 
+import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService;
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory
 import ro.bcr.bita.odi.proxy.OdiPathUtil
 import ro.bcr.bita.odi.proxy.OdiProjectPaths
@@ -18,6 +19,10 @@ import oracle.odi.domain.mapping.Mapping
 public class BitaModelFactory implements IBitaModelFactory {
 	
 	
+	protected BitaModelFactory() {
+		
+	}
+	
 	/* (non-Javadoc)
 	 * @see ro.bcr.bita.model.IBitaModelFactory#createOdiMapping(oracle.odi.domain.mapping.Mapping)
 	 */
@@ -33,22 +38,6 @@ public class BitaModelFactory implements IBitaModelFactory {
 	}
 	
 	@Override
-	@TypeChecked
-	public  IOdiCommandContext newOdiTemplateCommandContext(IOdiEntityFactory odiEntityFactory){
-		return new OdiCommandContext(odiEntityFactory);
-	}
-	
-	@Override
-	public OdiPathUtil newOdiPathUtil(IOdiEntityFactory odiEntityFactory) {
-		return new OdiPathUtil(odiEntityFactory);
-	}
-	
-	@Override
-	public OdiProjectPaths newOdiProjectPaths(Map<String,Set<String>> includePaths) {
-		return new OdiProjectPaths(includePaths);
-	}
-	
-	@Override
 	public IMappingDependencyRepositoryCyclicAware newMappingDeppendencyRepository() {
 		return new MappingDependencyRepository();
 	}
@@ -61,6 +50,11 @@ public class BitaModelFactory implements IBitaModelFactory {
 	@Override
 	public IMessageCollection newMessageCollection(String idCollection) {
 		return new MessageCollection(idCollection);
+	}
+	
+	
+	public static IBitaModelFactory newInstance() {
+		return new BitaModelFactory();
 	}
 
 }

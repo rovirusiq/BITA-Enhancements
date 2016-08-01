@@ -14,7 +14,6 @@ class OdiPathUtil {
 	
 	
 	private IOdiEntityFactory odiEntityFactory;
-	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();
 	
 	/**
 	 * @param odiEntityFactory
@@ -142,7 +141,7 @@ class OdiPathUtil {
 				includePaths.remove(k);
 			}
 		}
-		return bitaModelFactory.newOdiProjectPaths(includePaths);
+		return this.odiEntityFactory.newOdiProjectPaths(includePaths);
 	}
 
 }

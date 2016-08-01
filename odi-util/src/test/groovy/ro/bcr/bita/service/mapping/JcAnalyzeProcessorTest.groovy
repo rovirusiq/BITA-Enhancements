@@ -1,6 +1,6 @@
 package ro.bcr.bita.service.mapping
 
-import ro.bcr.bita.model.BitaMockModelFactory;
+import ro.bcr.bita.model.BitaSpockSpecification;
 import ro.bcr.bita.model.BitaModelFactoryForTesting;
 import ro.bcr.bita.model.IBitaModelFactory;
 
@@ -13,10 +13,10 @@ import oracle.odi.domain.mapping.physical.MapPhysicalNode;
 import spock.lang.Specification;
 
 
-class JcAnalyzeProcessorTest extends BitaMockModelFactory{
+class JcAnalyzeProcessorTest extends BitaSpockSpecification{
 
 	JcAnalyzeProcessor subject;
-	IBitaModelFactory bitaModelFactory=new BitaModelFactoryForTesting();
+	IBitaModelFactory bitaModelFactory=BitaModelFactoryForTesting.newInstance();
 	
 	def setup() {
 		subject=new JcAnalyzeProcessor(bitaModelFactory.newMappingDeppendencyRepository());

@@ -2,7 +2,7 @@ package ro.bcr.bita.model
 
 import spock.lang.Ignore;
 
-class OptimizedMappingDependencyRepositoryTest extends BitaMockModelFactory{
+class OptimizedMappingDependencyRepositoryTest extends BitaSpockSpecification{
 	
 	OptimizedMappingDependencyRepository subject;
 	

@@ -74,13 +74,13 @@ configurations{
 
 ext{
 	//logic to obtain a list of projects for which the artifacts are included in the distribution
-	skippedProjectsJars=[];
+	skippedProjectsJars=[project(":test-model"),project(":test-support"),/*project(":mappings")*/];
 	projectsInDistribution=project.subprojects-skippedProjectsJars;
 	//logic to identify all the classes and resources that are to be included in the jar
 	filesInAllJar=project.configurations.allDist.artifacts.files;
 	//projects from which to gather jacocoTestReport
-	jacocoExecutionData=[project(":odi-util")];
-	jacocoSourceData=[project(":odi-util")];
+	jacocoExecutionData=[project(":smart-deploy"),project(":surrogation"),project(":test-model")];
+	jacocoSourceData=[project(":smart-deploy"),project(":surrogation"),project(":model")];
 }
 
 

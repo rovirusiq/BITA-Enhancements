@@ -1,6 +1,14 @@
 package ro.bcr.bita.odi.proxy
 
-import ro.bcr.bita.model.JdbcDriverList
+import ro.bcr.bita.model.IBitaModelFactory;
+import ro.bcr.bita.odi.template.IOdiCommandContext;
+import ro.bcr.bita.odi.template.OdiCommandContext;
+
+import bsh.This;
+import groovy.transform.TypeChecked;
+
+import java.util.Map;
+import java.util.Set;
 
 import oracle.odi.core.OdiInstance
 import oracle.odi.core.config.MasterRepositoryDbInfo
@@ -31,6 +39,7 @@ import oracle.odi.domain.topology.finder.IOdiDataServerFinder;
 import oracle.odi.domain.topology.finder.IOdiLogicalSchemaFinder;
 import oracle.odi.domain.topology.finder.IOdiPhysicalSchemaFinder;
 
+//TODO treat errors
 class OdiEntityFactory implements IOdiEntityFactory{
 	/********************************************************************************************
 	 *
@@ -86,10 +95,7 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		public void setJdbcDriverClassName(String jdbcDriverClassName) {
 			this.jdbcDriverClassName = jdbcDriverClassName;
 		}
-		
-		public void setJdbcDriverClassName(JdbcDriverList driver) {
-			this.jdbcDriverClassName = driver.value();
-		}
+
 		/**
 		 * @param jdbcUrl the jdbcUrl to set
 		 */
@@ -100,75 +106,132 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	}
 	
 	private OdiInstance odiInstance;
+	private IBitaModelFactory bitaModelFactory;
+	private IOdiOperationsService odiOpSrv;
+	private IOdiBasicPersistenceService odiPersistSrv;
 	
 	/********************************************************************************************
 	 *
 	 *Constructor
 	 *
 	 ********************************************************************************************/
-	private OdiEntityFactory(OdiInstance odiInstance) {
+	private OdiEntityFactory(OdiInstance odiInstance,IBitaModelFactory bitaModelFactory) {
+		
+		if (odiInstance==null) throw new BitaOdiException("The parameter odiInstance for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance,bitaModelFactory)] cannot be null.");
+		if (bitaModelFactory==null) throw new BitaOdiException("The parameter bitaModelFactory for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance,bitaModelFactory)] cannot be null.");
+		
 		this.odiInstance=odiInstance;
+		this.odiPersistSrv=new OdiBasicPersistenceService(odiInstance);
+		this.bitaModelFactory=bitaModelFactory;
+		this.odiOpSrv=new OdiOperationsService(this.bitaModelFactory,this);
 	}
 	/********************************************************************************************
 	 *
 	 *IOdiEntityFactory
 	 *
-	 ********************************************************************************************/
-
-	@Override
-	public ITransactionDefinition createDefaultTransactionDefinition() throws BitaOdiException{
-		return new DefaultTransactionDefinition();
-	}
-
-	@Override
-	public ITransactionManager getTransactionManager() throws BitaOdiException{
-		return this.odiInstance.getTransactionManager();
-	}
-	
-	@Override
-	public ITransactionStatus createTransactionStatus(ITransactionManager tm, ITransactionDefinition defn) throws BitaOdiException{
-		return tm.getTransaction(defn);
-	}
-	
+	 ********************************************************************************************/	
 	@Override
 	public IMappingFinder createMappingFinder() throws BitaOdiException{
-		(IMappingFinder)this.odiInstance.getTransactionalEntityManager().getFinder(Mapping.class);
+		try {
+			return (IMappingFinder)this.odiInstance.getTransactionalEntityManager().getFinder(Mapping.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	@Override
 	public IOdiProjectFinder createProjectFinder() throws BitaOdiException{
-		(IOdiProjectFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiProject.class);
+		try {
+			return (IOdiProjectFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiProject.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	@Override
 	public IOdiScenarioFinder createScenarioFinder() throws BitaOdiException{
-		(IOdiScenarioFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiScenario.class);
+		try {
+			return (IOdiScenarioFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiScenario.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	@Override
 	public IOdiScenarioFolderFinder createScenarioFolderFinder() throws BitaOdiException {
-		(IOdiScenarioFolderFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiScenarioFolder.class);
+		try {
+			return (IOdiScenarioFolderFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiScenarioFolder.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	
 	@Override
 	public IOdiFolderFinder createProjectFolderFinder() throws BitaOdiException {
-		(IOdiFolderFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiFolder.class);
+		try {
+			return (IOdiFolderFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiFolder.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	
 	@Override
 	public IOdiContextFinder createContextFinder() throws BitaOdiException {
-		(IOdiContextFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiContext.class);
+		try {
+			return (IOdiContextFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiContext.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	@Override
 	public IOdiLogicalSchemaFinder createLogicalSchemaFinder() throws BitaOdiException {
-		(IOdiLogicalSchemaFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiLogicalSchema.class);
+		try {
+			return (IOdiLogicalSchemaFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiLogicalSchema.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	@Override
 	public IOdiPhysicalSchemaFinder createPhysicalSchemaFinder() throws BitaOdiException {
-		(IOdiPhysicalSchemaFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiPhysicalSchema.class);
+		try {
+			return (IOdiPhysicalSchemaFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiPhysicalSchema.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
 	
 	@Override
 	public IOdiDataServerFinder createDataServerFinder() throws BitaOdiException {
-		(IOdiDataServerFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiDataServer.class);
+		try {
+			return (IOdiDataServerFinder)this.odiInstance.getTransactionalEntityManager().getFinder(OdiDataServer.class);
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
 	}
+	@Override
+	public ITransactionStatus createTransaction() throws BitaOdiException {
+		try {
+			return this.odiInstance.getTransactionManager().getTransaction(new DefaultTransactionDefinition());
+		} catch (Exception ex) {
+			giftWrap(ex);
+		}
+	}
+	/********************************************************************************************
+	 *Odi Utils related
+	 ********************************************************************************************/
+	@Override
+	public OdiPathUtil newOdiPathUtil() {
+		return new OdiPathUtil(this);
+	}
+	
+	@Override
+	public OdiProjectPaths newOdiProjectPaths(Map<String,Set<String>> includePaths) {
+		return new OdiProjectPaths(includePaths);
+	}
+	
+	@Override
+	@TypeChecked
+	public  IOdiCommandContext newOdiTemplateCommandContext(){
+		return new OdiCommandContext(this,this.odiOpSrv,this.odiPersistSrv);
+	}
+	
 	/********************************************************************************************
 	 *
 	 *Own Instance methods
@@ -176,6 +239,14 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	 ********************************************************************************************/
 	public OdiInstance getOdiInstance() {
 		return this.odiInstance;
+	}
+	/********************************************************************************************
+	 *
+	 *Static utility methods
+	 *
+	 ********************************************************************************************/
+	private static final giftWrap(Exception ex) throws BitaOdiException{
+		throw new BitaOdiException("Unexpected exception in persistence service:"+ex);
 	}
 	
 	/********************************************************************************************
@@ -192,11 +263,11 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		return ((smth!=null) && (!"".equals(smth)));
 	}
 	
-	public static IOdiEntityFactory createInstance(OdiInstance odiInstance) throws BitaOdiException{
-		if (odiInstance==null) throw new BitaOdiException("The parameter odiInstance for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance)] cannot be null.");
-		return new OdiEntityFactory(odiInstance);
+	public static IOdiEntityFactory createInstance(OdiInstance odiInstance,IBitaModelFactory bitaModelFactory) throws BitaOdiException{
+
+		return new OdiEntityFactory(odiInstance,bitaModelFactory);
 	}
-	public static IOdiEntityFactory createInstance(OdiInstanceProperties odiInstanceProperties) throws BitaOdiException{
+	public static IOdiEntityFactory createInstanceFromProperties(OdiInstanceProperties odiInstanceProperties,IBitaModelFactory bitaModelFactory) throws BitaOdiException{
 		
 		if (odiInstanceProperties==null) throw new BitaOdiException("The parameter odiInstanceProperties for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstanceProperties)] cannot be null.");
 		
@@ -223,18 +294,9 @@ class OdiEntityFactory implements IOdiEntityFactory{
 				inst.close();
 				throw new BitaOdiException("Cannot create OdiInstance.",e);
 		}
-		return new OdiEntityFactory(inst);
+		return new OdiEntityFactory(inst,bitaModelFactory);
 		
 	}
-	@Override
-	public void cleanuUp() throws BitaOdiException {
-		if (this.odiInstance) {
-			try {
-				this.odiInstance.close();
-			} catch (Exception ex) {
-			//ingnore
-			}
-		}
-		
-	}
+	
+	
 }

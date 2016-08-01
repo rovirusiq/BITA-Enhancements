@@ -33,7 +33,6 @@ class BitaMappingAnalyzerService implements IMappingAnalyzer{
 		IOdiBasicCommand cmd={IOdiCommandContext ctx ->
 			ctx.findMappings(odiPaths).each{IOdiMapping m->
 				
-				
 				this.procs.each{IMappingAnalyzeProcessor p->
 					p.processMapping(m);
 				}
@@ -41,8 +40,7 @@ class BitaMappingAnalyzerService implements IMappingAnalyzer{
 				 * clear the context after the processing of each mapping
 				 * it helps keep the memory at a low level
 				 */
-				OdiCommandContext nCtx=((OdiCommandContext)ctx);
-				((OdiEntityFactory)nCtx.getOdiEntityFactory()).getOdiInstance().getTransactionalEntityManager().clear();
+				ctx.clearPersistenceContext();
 				m=null;
 			}
 			

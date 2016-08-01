@@ -1,6 +1,6 @@
 package ro.bcr.bita.model
 
-class MappingDependecyRepositoryTest extends BitaMockModelFactory{
+class MappingDependecyRepositoryTest extends BitaSpockSpecification{
 	
 	MappingDependencyRepository subject;
 	

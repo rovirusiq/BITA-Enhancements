@@ -1,10 +1,10 @@
 rootProject.name = 'bita-master';
-includeFlat "model";
-includeFlat "test-support";
-includeFlat "test-model";
+//includeFlat "model";
+//includeFlat "test-support";
+//includeFlat "test-model";
 //includeFlat "mappings";
-includeFlat "surrogation";
-includeFlat "smart-deploy";
+//includeFlat "surrogation";
+//includeFlat "smart-deploy";
 includeFlat "odi-util";
 
 

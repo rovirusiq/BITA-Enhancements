@@ -4,7 +4,7 @@ import oracle.odi.domain.mapping.Mapping
 
 //TODO add more specifc tests for source identification and target identification
 //TODO add tests for query generation and execution
-class OdiMappingTest extends BitaMockModelFactory{
+class OdiMappingTest extends BitaSpockSpecification{
 	
 	def OdiMapping subject;
 	def Mapping odiObject;

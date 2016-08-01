@@ -1,19 +1,23 @@
-package ro.bcr.bita.model
+package ro.bcr.bita.odi.proxy
 
-import ro.bcr.bita.odi.template.OdiCommandContext
-import ro.bcr.bita.odi.template.OdiTemplateException
+import ro.bcr.bita.model.BitaModelFactoryForTesting;
+import ro.bcr.bita.model.BitaSpockSpecification
+import ro.bcr.bita.model.IBitaModelFactory;
+import ro.bcr.bita.model.IOdiMapping;
 
-import oracle.odi.domain.mapping.Mapping
-import oracle.odi.domain.mapping.finder.IMappingFinder
-import oracle.odi.domain.project.OdiFolder
+import oracle.odi.domain.mapping.Mapping;
+import oracle.odi.domain.project.OdiFolder;
 
-class OdiCommandContextTest extends BitaMockModelFactory {
+class OdiOperationsServiceTest extends BitaSpockSpecification {
 	
-	OdiCommandContext subject;
+	private OdiOperationsService subject;
+	private IBitaModelFactory bitaModelFactory;
 	
-	def setup() {//cheama automat fixture-ul dinainte
-		subject=new OdiCommandContext(stbOdiEntityFactory);
+	def setup() {
+		bitaModelFactory=BitaModelFactoryForTesting.newInstance();
+		subject=new OdiOperationsService(bitaModelFactory,stbOdiEntityFactory);
 	}
+	
 	
 	def "Find Mappings - no parameter provided"(){
 		given:	"no projects, no folders and no mappings"
@@ -62,11 +66,11 @@ class OdiCommandContextTest extends BitaMockModelFactory {
 				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_1") >> [m1,m2];
 				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_1") >> [];
 				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_2") >> [m4,m5,m3];
-		when:	"find mappings is called without parameters"
+		when:	"find mappings is called with the project paths from above"
 				List<IOdiMapping> rsp=subject.findMappings("+PRJ_A:FOLDER_1","PRJ_B:FOLDER_2","PRJ_B:FOLDER_1");
-		then:	"an empty list is returned"
+		then:	"a list with maps is returned"
 				rsp!=null;
-				rsp.size()==5;			
+				rsp.size()==5;
 	}
 	
 	
@@ -114,7 +118,7 @@ class OdiCommandContextTest extends BitaMockModelFactory {
 		when:	"when an unexpected exception is thrown"
 				List<IOdiMapping> rsp=subject.findMappings("+PRJ_A:FOLDER_1","PRJ_A:FOLDER_2","+PRJ_B:FOLDER_2","PRJ_B:FOLDER_1","-PRJ_B:FOLDER_1");
 		then:	"an exception is thrown"
-				thrown OdiTemplateException;
+				thrown BitaOdiException;
 	}
 
 }

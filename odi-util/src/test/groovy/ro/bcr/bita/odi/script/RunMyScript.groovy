@@ -4,6 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import oracle.odi.core.OdiInstance;
+import oracle.odi.core.persistence.IOdiEntityManager;
 import oracle.odi.core.persistence.transaction.ITransactionDefinition
 import oracle.odi.core.persistence.transaction.ITransactionManager;
 import oracle.odi.core.persistence.transaction.ITransactionStatus;
@@ -14,11 +15,13 @@ class RunMyScript extends Specification{
 	def OdiInstance mOdiInstance;
 	def ITransactionManager mTxManager;
 	def ITransactionStatus mTxStatus;
+	def IOdiEntityManager mEntityManager;
 	
 	def setup() {
 		mOdiInstance=Mock();
 		mTxManager=Mock();
 		mTxStatus=Mock();
+		mEntityManager=Mock();
 	}
 	
 	
@@ -37,6 +40,7 @@ class RunMyScript extends Specification{
 		then: "The binding parameter is changed based on the script commands"
 				//the number of interactions is tested in another test. We are not interested in interactions
 				mOdiInstance.getTransactionManager() >> mTxManager;
+				mOdiInstance.getTransactionalEntityManager() >> mEntityManager;
 				mTxManager.getTransaction(_ as ITransactionDefinition) >> mTxStatus;
 				mTxManager.commit(mTxStatus);
 			

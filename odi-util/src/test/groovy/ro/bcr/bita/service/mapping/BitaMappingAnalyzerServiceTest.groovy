@@ -1,8 +1,9 @@
 package ro.bcr.bita.service.mapping
 
-import ro.bcr.bita.model.BitaMockModelFactory;
+import ro.bcr.bita.model.BitaSpockSpecification;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IOdiMapping;
+import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService;
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
 import ro.bcr.bita.odi.template.IOdiBasicCommand;
 import ro.bcr.bita.odi.template.IOdiBasicTemplate
@@ -12,25 +13,20 @@ import ro.bcr.bita.service.IMappingAnalyzeProcessor;
 
 import spock.lang.Specification
 
-class BitaMappingAnalyzerServiceTest extends BitaMockModelFactory {
+class BitaMappingAnalyzerServiceTest extends BitaSpockSpecification {
 
 	
 	BitaMappingAnalyzerService subject;
 	IOdiBasicTemplate odiTemplate;
-	IBitaModelFactory bitaModelFactory;
-	IOdiEntityFactory odiEntityFactory;
-	
-	IOdiCommandContext cmdCtx;
+	IOdiEntityFactory stOdiEntityFactory;
+	IOdiCommandContext mCmdCtx;
 	
 	
 	def setup() {
-		
-		odiEntityFactory=Stub();
-		bitaModelFactory=Stub();
-		cmdCtx=Mock();
-		
-		odiTemplate=new OdiBasicTemplate(odiEntityFactory,bitaModelFactory);
-		bitaModelFactory.newOdiTemplateCommandContext(_) >> cmdCtx;
+		stOdiEntityFactory=Stub()
+		mCmdCtx=Mock();
+		odiTemplate=new OdiBasicTemplate(stOdiEntityFactory);
+		stOdiEntityFactory.newOdiTemplateCommandContext() >> mCmdCtx;
 		subject=new BitaMappingAnalyzerService(odiTemplate);
 		
 	}
@@ -46,7 +42,7 @@ class BitaMappingAnalyzerServiceTest extends BitaMockModelFactory {
 				subject.analyzeMappingsFrom("PRJ_1:FLD_1");
 				
 		then:	"The OdiTemplate interaction is checked"
-				1 * cmdCtx.findMappings(_) >> []
+				1 * mCmdCtx.findMappings(_) >> []
 	}
 	
 	def "Interactions with processors - with some mappings"(){
@@ -63,11 +59,12 @@ class BitaMappingAnalyzerServiceTest extends BitaMockModelFactory {
 				subject.analyzeMappingsFrom("PRJ_1:FLD_1");
 				
 		then:	"The interactions with al objects is tested"
-				1 * cmdCtx.findMappings(_) >> [mp1,mp2]
+				1 * mCmdCtx.findMappings(_) >> [mp1,mp2]
 				1 * p1.processMapping(mp1)
 				1 * p1.processMapping(mp2)
 				1 * p2.processMapping(mp1)
 				1 * p2.processMapping(mp2)
+				3 * mCmdCtx.clearPersistenceContext();//one for each mapping and one fior the odi without transaction
 	}
 
 	

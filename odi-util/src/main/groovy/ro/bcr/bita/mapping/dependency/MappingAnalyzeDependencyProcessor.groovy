@@ -1,22 +1,22 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.mapping.dependency
 
+import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IDependency
 import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.MappingDependency;
 import ro.bcr.bita.model.MappingDependencyRepository
-import ro.bcr.bita.service.IMappingAnalyzeProcessor;
 
 import groovy.transform.CompileStatic;
 
 @CompileStatic
-class JcAnalyzeProcessor implements IMappingAnalyzeProcessor{
+class MappingAnalyzeDependencyProcessor implements IMappingAnalyzeProcessor{
 	
 	private final IMappingDependencyRepositoryCyclicAware repo;
 	private final Set<IOdiMapping> allMappings=[];
 	
-	public JcAnalyzeProcessor(IMappingDependencyRepositoryCyclicAware repository) {
+	public MappingAnalyzeDependencyProcessor(IMappingDependencyRepositoryCyclicAware repository) {
 		this.repo=repository;
 	}
 

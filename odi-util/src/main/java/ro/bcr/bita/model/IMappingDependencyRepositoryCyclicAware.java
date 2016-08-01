@@ -2,8 +2,8 @@ package ro.bcr.bita.model;
 
 import java.util.Set;
 
-public interface IMappingDependencyRepositoryCyclicAware extends IMappingDependencyRepository {
+public interface IMappingDependencyRepositoryCyclicAware<H,O> extends IMappingDependencyRepository<H,O> {
 
-	public Set<IDependency<String, String>> getMappingDependenciesAndCheckCyclicDependencies() throws BitaModelException;
+	public Set<IDependency<H, O>> getMappingDependenciesAndCheckCyclicDependencies() throws BitaModelException;
 	
 }

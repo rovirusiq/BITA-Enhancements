@@ -1,5 +1,6 @@
 package ro.bcr.bita.odi.script;
 import ro.bcr.bita.model.BitaModelFactory;
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
 import ro.bcr.bita.odi.proxy.OdiBasicPersistenceService
 import ro.bcr.bita.odi.proxy.OdiEntityFactory;
 import ro.bcr.bita.odi.template.OdiBasicTemplate
@@ -24,7 +25,10 @@ class BitaBaseScript extends Script{
 			def OdiBasicTemplate odiTemplate;
 			
 			if (binding.hasVariable("odiInstance")) {
-				odiTemplate=new OdiBasicTemplate(OdiEntityFactory.createInstance(odiInstance,BitaModelFactory.newInstance()));
+				
+				IOdiEntityFactory odiEntityFactory=OdiEntityFactory.createInstance(odiInstance,BitaModelFactory.newInstance());
+				
+				odiTemplate=odiEntityFactory.newOdiTemplate();
 			}
 			
 		

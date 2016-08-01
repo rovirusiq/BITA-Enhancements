@@ -1,9 +1,10 @@
-package ro.bcr.bita.service.sql
+package ro.bcr.bita.sql
 
-import ro.bcr.bita.service.BitaServiceException;
-import ro.bcr.bita.service.IBitaSqlSimpleOperations;
+import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzeException;
+import ro.bcr.bita.sql.IBitaSqlSimpleOperations;
 
 import groovy.sql.Sql;
+
 import java.sql.Connection
 
 class BitaSqlSimpleOperations implements IBitaSqlSimpleOperations{
@@ -17,21 +18,20 @@ class BitaSqlSimpleOperations implements IBitaSqlSimpleOperations{
 	}
 
 	@Override
-	public void executeInCurrentTransaction(String... sqls) throws BitaServiceException {
+	public void executeInCurrentTransaction(String... sqls) throws BitaSqlException {
 		for (String s:sqls) {
 			this.db.execute(s);
 		}
-		this.commit();
 	}
 
 	@Override
-	public void commit() throws BitaServiceException {
+	public void commit() throws BitaSqlException {
 		this.db.commit();
 		
 	}
 
 	@Override
-	public void rollback() throws BitaServiceException {
+	public void rollback() throws BitaSqlException {
 		this.db.rollback();
 		
 	}

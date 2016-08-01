@@ -1,5 +1,7 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.service.mapping.analyze
 
+import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService;
+import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor;
 import ro.bcr.bita.model.BitaSpockSpecification;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IOdiMapping;
@@ -9,7 +11,6 @@ import ro.bcr.bita.odi.template.IOdiBasicCommand;
 import ro.bcr.bita.odi.template.IOdiBasicTemplate
 import ro.bcr.bita.odi.template.IOdiCommandContext;
 import ro.bcr.bita.odi.template.OdiBasicTemplate;
-import ro.bcr.bita.service.IMappingAnalyzeProcessor;
 
 import spock.lang.Specification
 

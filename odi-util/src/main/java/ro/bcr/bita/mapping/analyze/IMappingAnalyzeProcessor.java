@@ -1,4 +1,4 @@
-package ro.bcr.bita.service;
+package ro.bcr.bita.mapping.analyze;
 
 import ro.bcr.bita.model.IOdiMapping;
 

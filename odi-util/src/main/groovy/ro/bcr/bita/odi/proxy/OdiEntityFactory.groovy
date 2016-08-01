@@ -2,6 +2,7 @@ package ro.bcr.bita.odi.proxy
 
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.odi.template.IOdiCommandContext;
+import ro.bcr.bita.odi.template.OdiBasicTemplate;
 import ro.bcr.bita.odi.template.OdiCommandContext;
 
 import bsh.This;
@@ -217,11 +218,13 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	 *Odi Utils related
 	 ********************************************************************************************/
 	@Override
+	@TypeChecked
 	public OdiPathUtil newOdiPathUtil() {
 		return new OdiPathUtil(this);
 	}
 	
 	@Override
+	@TypeChecked
 	public OdiProjectPaths newOdiProjectPaths(Map<String,Set<String>> includePaths) {
 		return new OdiProjectPaths(includePaths);
 	}
@@ -230,6 +233,12 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	@TypeChecked
 	public  IOdiCommandContext newOdiTemplateCommandContext(){
 		return new OdiCommandContext(this,this.odiOpSrv,this.odiPersistSrv);
+	}
+	
+	@Override
+	@TypeChecked
+	public OdiBasicTemplate newOdiTemplate() {
+		return new OdiBasicTemplate(this);
 	}
 	
 	/********************************************************************************************
@@ -297,6 +306,7 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		return new OdiEntityFactory(inst,bitaModelFactory);
 		
 	}
+	
 	
 	
 }

@@ -1,4 +1,4 @@
-package ro.bcr.bita.service;
+package ro.bcr.bita.mapping.analyze;
 
 import ro.bcr.bita.odi.proxy.OdiPathUtil;
 
@@ -12,7 +12,7 @@ import ro.bcr.bita.odi.proxy.OdiPathUtil;
  * @see IMappingAnalyzeProcessor
  * @see OdiPathUtil
  */
-public interface IMappingAnalyzer {
+public interface IMappingAnalyzerService {
 	
 	/**
 	 * @param processor The processor to be added to the analyze.

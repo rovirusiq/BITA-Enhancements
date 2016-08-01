@@ -1,7 +1,5 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.mapping.dependency.jc
 
-import ro.bcr.bita.model.IMessageCollection;
-import ro.bcr.bita.service.mapping.JcSqlGenerator.Parameters;
 
 class JcParameters {
 		

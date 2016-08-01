@@ -18,12 +18,16 @@ class OdiBasicTemplateTest extends Specification{
 	ITransactionStatus mTxStatus;
 	IOdiBasicCommand mCommand;
 	IOdiCommandContext mCtx;
+	OdiCommandContext mFullContext;
+	OdiEntityFactory mFullOdiFactory
 	
 	def setup() {
 		mOdiEntityFactory=Mock();
 		mTxStatus=Mock();
 		mCommand=Mock();
 		mCtx=Mock();
+		mFullContext=Mock();
+		mFullOdiFactory=Mock();
 	}
 	
 	def "Test Interaction of OdiBasicTemplate in transaction"(){	
@@ -79,28 +83,19 @@ class OdiBasicTemplateTest extends Specification{
 			
 	}
 	
-	@Ignore
 	def "when one needs the OdiInstance it can obtain it using a dirty trick"(){
 		given: """A bunch of objects need to create an OdiTemplate.
 				The objects are created in the setup method"""
-				def contextReceived;
-				OdiCommandContext mFullContext=Mock();
-				OdiEntityFactory mFullOdiFactory=Mock();
-				
-		when:	"The OdiTemplate is build and you execute a command"
-				contextReceived=null;
+				def contextReceived=null;
 				OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mFullOdiFactory);
-				odiTmpl.executeWithoutTransaction(mCommand);
-		then:	"In the command you have acces to the OdiComandContext"
-				mFullContext.getOdiEntityFactory() >> mFullOdiFactory;
+				mFullContext.getOdiEntityFactory() >> {return mFullOdiFactory};
 				mFullOdiFactory.newOdiTemplateCommandContext() >> mFullContext;
 				mCommand.execute(_ as IOdiCommandContext) >> {arg-> contextReceived=arg[0];};
-		then:	"Which in turn gives you access to the OdiInstance"
+		when:	"The OdiTemplate is build and you execute a command"
+				odiTmpl.executeWithoutTransaction(mCommand);
+		then:	"You have access to th econtext and the context gives you access to the odiEntityFactory"
 				contextReceived instanceof OdiCommandContext;
 				contextReceived==mFullContext;
-				println mFullContext.getOdiEntityFactory();
-				println mFullOdiFactory;
-				OdiEntityFactory f=((OdiCommandContext)contextReceived).getOdiEntityFactory();
-				f==mFullOdiFactory;
+				mFullOdiFactory.equals(contextReceived.getOdiEntityFactory());
 	}
 }

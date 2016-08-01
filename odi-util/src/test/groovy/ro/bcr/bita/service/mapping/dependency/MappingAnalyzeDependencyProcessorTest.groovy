@@ -1,5 +1,6 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.service.mapping.dependency
 
+import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor;
 import ro.bcr.bita.model.BitaSpockSpecification;
 import ro.bcr.bita.model.BitaModelFactoryForTesting;
 import ro.bcr.bita.model.IBitaModelFactory;
@@ -13,13 +14,13 @@ import oracle.odi.domain.mapping.physical.MapPhysicalNode;
 import spock.lang.Specification;
 
 
-class JcAnalyzeProcessorTest extends BitaSpockSpecification{
+class MappingAnalyzeDependencyProcessorTest extends BitaSpockSpecification{
 
-	JcAnalyzeProcessor subject;
+	MappingAnalyzeDependencyProcessor subject;
 	IBitaModelFactory bitaModelFactory=BitaModelFactoryForTesting.newInstance();
 	
 	def setup() {
-		subject=new JcAnalyzeProcessor(bitaModelFactory.newMappingDeppendencyRepository());
+		subject=new MappingAnalyzeDependencyProcessor(bitaModelFactory.newMappingDeppendencyRepository());
 	}
 	
 	def "Test result methods - 1 mapping"(){

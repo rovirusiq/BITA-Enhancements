@@ -1,6 +1,7 @@
 package ro.bcr.bita.odi.proxy;
 
 import ro.bcr.bita.odi.template.IOdiCommandContext;
+import ro.bcr.bita.odi.template.OdiBasicTemplate;
 
 import java.util.Map;
 import java.util.Set;
@@ -50,4 +51,6 @@ public interface IOdiEntityFactory {
 	public abstract OdiProjectPaths newOdiProjectPaths(Map<String,Set<String>> includePaths);
 	
 	public abstract IOdiCommandContext newOdiTemplateCommandContext();
+	
+	public abstract OdiBasicTemplate newOdiTemplate();
 }

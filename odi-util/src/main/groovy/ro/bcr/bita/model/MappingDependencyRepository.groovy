@@ -2,7 +2,7 @@ package ro.bcr.bita.model
 
 
 //TODO more detailed exception about Cyclic dependencies detected
-class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicAware {
+class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicAware<String,String> {
 	
 	
 	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();

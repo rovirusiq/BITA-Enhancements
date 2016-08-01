@@ -1,33 +1,33 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.mapping.dependency.jc
 
+import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzeException;
+import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IDependency
 import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.MappingDependency;
 import ro.bcr.bita.model.MappingDependencyRepository
-import ro.bcr.bita.service.IBitaSqlSimpleOperations
-import ro.bcr.bita.service.IMappingAnalyzeProcessor;
+import ro.bcr.bita.sql.IBitaSqlSimpleOperations;
 
 import groovy.transform.CompileStatic;
 
 @CompileStatic
-class JcStreamSqlGenerator implements IMappingAnalyzeProcessor{
+class JcStreamSqlExecutor implements IMappingAnalyzeProcessor{
 	
 	private final IMappingDependencyRepositoryCyclicAware repo;
 	private final IBitaSqlSimpleOperations sqlExecutor;
 	private final JcParameters params;
 	private final JcSqlGeneratorHelper sqlGenerator=new JcSqlGeneratorHelper();
+	private final Boolean intermediaryCommit;
+	private Boolean statusSqlBefore=false;
 	
-	public JcStreamSqlGenerator(IMappingDependencyRepositoryCyclicAware repository,IBitaSqlSimpleOperations sqlExecutor,JcParameters params) {
+	public JcStreamSqlExecutor(IMappingDependencyRepositoryCyclicAware repository,IBitaSqlSimpleOperations sqlExecutor,JcParameters params,Boolean applyCommits) {
 		this.repo=repository;
 		this.sqlExecutor=sqlExecutor;
 		this.params=params;
-		
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlGroupDefinition(params));
-		
+		this.intermediaryCommit=applyCommits;	
 	}
-
 	/********************************************************************************************
 	 *
 	 *Private
@@ -38,6 +38,7 @@ class JcStreamSqlGenerator implements IMappingAnalyzeProcessor{
 		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlJobDefinition(params,mapping.getName()));
 		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlJobParameters(params,mapping.getName(),mapping.getLeadingSource()));
 		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlGroupJobs(params,mapping.getName()));
+		if (this.intermediaryCommit) this.sqlExecutor.commit();
 	}
 	/********************************************************************************************
 	 *
@@ -46,6 +47,7 @@ class JcStreamSqlGenerator implements IMappingAnalyzeProcessor{
 	 ********************************************************************************************/
 	@Override
 	public void processMapping(IOdiMapping mapping) {
+		if (!this.statusSqlBefore) throw new BitaMappingAnalyzeException("The SQL statements for group definition were not executed. Please call before ampping analysis the method generateAndExecuteSqlBeforeAnalysis");
 		mapping.identifySources().each{String tblName->
 			repo.addTableToMapping(tblName,mapping.getName());
 		}
@@ -54,7 +56,14 @@ class JcStreamSqlGenerator implements IMappingAnalyzeProcessor{
 		mapping=null;
 	}
 	
-	public void generateAndExecuteSqlForDependencies() {
+	
+	public generateAndExecuteSqlBeforeAnalysis() {
+		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlGroupDefinition(params));
+		if (this.intermediaryCommit) this.sqlExecutor.commit();
+		this.statusSqlBefore=true;
+	}
+	
+	public void generateAndExecuteSqlAfterAnalysis() {
 		Set<IDependency> dpds=this.repo.getMappingDependenciesAndCheckCyclicDependencies();
 		
 		 for (IDependency dep:dpds) {

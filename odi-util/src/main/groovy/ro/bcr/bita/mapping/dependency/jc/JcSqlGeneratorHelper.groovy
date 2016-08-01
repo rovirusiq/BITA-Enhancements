@@ -1,4 +1,4 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.mapping.dependency.jc
 
 import groovy.text.Template
 import groovy.transform.CompileStatic

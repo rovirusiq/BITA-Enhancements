@@ -15,7 +15,7 @@ class OdiBasicTemplate implements IOdiBasicTemplate{
 	
 	private IOdiEntityFactory odiEntityFactory;
 	
-	public OdiBasicTemplate(IOdiEntityFactory odiEntityFactory) throws OdiTemplateException{
+	protected OdiBasicTemplate(IOdiEntityFactory odiEntityFactory) throws OdiTemplateException{
 		if (odiEntityFactory==null) throw new OdiTemplateException("The constructor argument odiEntityfactory for the OdiBasicTemplate cannot be null");
 		this.odiEntityFactory=odiEntityFactory;
 	}

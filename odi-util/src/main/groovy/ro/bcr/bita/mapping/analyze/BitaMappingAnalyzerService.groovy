@@ -1,4 +1,4 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.mapping.analyze
 
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.OdiMapping;
@@ -7,15 +7,14 @@ import ro.bcr.bita.odi.template.IOdiBasicCommand
 import ro.bcr.bita.odi.template.IOdiBasicTemplate;
 import ro.bcr.bita.odi.template.IOdiCommandContext;
 import ro.bcr.bita.odi.template.OdiCommandContext;
-import ro.bcr.bita.service.IMappingAnalyzeProcessor
-import ro.bcr.bita.service.IMappingAnalyzer;
 
 import oracle.odi.domain.IOdiEntity;
 import groovy.transform.CompileStatic;
 
+
+//TODO add options- readonly, check for modification, frequency for commit/clear
 @CompileStatic
-class BitaMappingAnalyzerService implements IMappingAnalyzer{
-	//TODO make it a set
+class BitaMappingAnalyzerService implements IMappingAnalyzerService{
 	private List<IMappingAnalyzeProcessor> procs=[];
 	private final IOdiBasicTemplate odiTemplate;
 	

@@ -1,5 +1,8 @@
-package ro.bcr.bita.service.mapping
+package ro.bcr.bita.service.mapping.dependency.jc
 
+import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor;
+import ro.bcr.bita.mapping.dependency.jc.JcParameters
+import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator;
 import ro.bcr.bita.model.IMessageCollection;
 import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.MappingDependency;
@@ -11,17 +14,19 @@ import spock.lang.Specification
 class JcSqlGeneratorTest extends Specification{
 	
 	JcSqlGenerator subject;
-	JcAnalyzeProcessor processor;
-	MessageCollectionUtil msgCollUtl=new MessageCollectionUtil();
-	JcSqlGenerator.Parameters params;
+	MappingAnalyzeDependencyProcessor processor;
+	JcParameters params;
+	IMessageCollection sqlDependency;
+	IMessageCollection sqlGroup;
+	IMessageCollection sqlJob;
 	
 	def setup() {
 		processor=Mock();
 		subject=new JcSqlGenerator(processor);
-		params=JcSqlGenerator.Parameters.newSqlParameters();
-		params.sqlJobDependencyStatements=new MessageCollection("test1");
-		params.sqlJobGroupStatements=new MessageCollection("test2");
-		params.sqlJobParameterStatements=new MessageCollection("test3");
+		params=JcParameters.newParameters("JC_BMF","R1","V1");
+		sqlDependency=new MessageCollection("test1");
+		sqlGroup=new MessageCollection("test2");
+		sqlJob=new MessageCollection("test3");
 	}
 	
 	def "Dependency SQL - No mapings, empty set of dependencies"(){
@@ -29,14 +34,14 @@ class JcSqlGeneratorTest extends Specification{
 				Set<MappingDependency> stDeps=[];
 				Set<IOdiMapping> myMappings=[];
 		when:	"The generateSql method is called"
-				subject.generateSql(params);
+				subject.generateSql(params,sqlGroup,sqlJob,sqlDependency);
 		then:	"the interactions are as below"
 				1 * processor.getAllMappings() >> myMappings;
 				0 * processor.getDependencies() >> stDeps;
 		then:	"we will get empty IMessageCollection(s) with sqls"
-				IMessageCollection sqlDep=params.sqlJobDependencyStatements;
-				IMessageCollection sqlGroup=params.sqlJobGroupStatements;
-				IMessageCollection sqlParameter=params.sqlJobParameterStatements;
+				IMessageCollection sqlDep=sqlDependency;
+				IMessageCollection sqlGroup=sqlGroup;
+				IMessageCollection sqlParameter=sqlJob;
 				sqlDep.getNoOfKeys()==0;
 				sqlGroup.getNoOfKeys()==0;
 				sqlParameter.getNoOfKeys()==0;
@@ -48,23 +53,23 @@ class JcSqlGeneratorTest extends Specification{
 				IOdiMapping myMap1=Mock();
 				Set<IOdiMapping> myMappings=[myMap1];
 		when:	"The generateSql method is called"
-				subject.generateSql(params);
+				subject.generateSql(params,sqlGroup,sqlJob,sqlDependency);
 		then:	"the interactions are as below"
 				1 * processor.getAllMappings() >> myMappings;
 				myMap1.getName() >> "MP_A";
 				myMap1.getLeadingSource() >> "LC_A";
 				1 * processor.getDependencies() >> stDeps;
 		then:	"we get sql defintions in for group definition and group parameters " 
-				IMessageCollection sqlDep=params.sqlJobDependencyStatements;
-				IMessageCollection sqlGroup=params.sqlJobGroupStatements;
-				IMessageCollection sqlParameter=params.sqlJobParameterStatements;
+				IMessageCollection sqlDep=sqlDependency;
+				IMessageCollection sqlGroup=sqlGroup;
+				IMessageCollection sqlParameter=sqlJob;
 				sqlDep.getNoOfKeys()==1;
 				sqlDep.getNoOfMessagesForKey("MP_A")==1;//delete dependencies
 				sqlGroup.getNoOfKeys()==2;//one group, one mapping
-				sqlGroup.getNoOfMessagesForKey(params.jobGroupName)==4;//1 delete jobs, 1 delete,1 create, 1 association
-				sqlGroup.getNoOfMessagesForKey("MP_A")==1;//1 merge
+				sqlGroup.getNoOfMessagesForKey(params.jobGroupName)==3;//1 delete associations, 1 delete,1 create
+				sqlGroup.getNoOfMessagesForKey("MP_A")==1;//1 association group job
 				sqlParameter.getNoOfKeys()==1;//one mapping
-				sqlParameter.getNoOfMessagesForKey("MP_A")==1;//one merge
+				sqlParameter.getNoOfMessagesForKey("MP_A")==2;//1 merge for job definition, 1 merge for parameters
 	}
 
 	
@@ -79,7 +84,7 @@ class JcSqlGeneratorTest extends Specification{
 				IOdiMapping myMap3=Mock();
 				Set<IOdiMapping> myMappings=[myMap1,myMap2,myMap3];
 		when:	"The generateSql method is called"
-				subject.generateSql(params);
+				subject.generateSql(params,sqlGroup,sqlJob,sqlDependency);
 		then:	"the interactions are as below"
 				1 * processor.getAllMappings() >> myMappings;
 				myMap1.getName() >> "MP_A";
@@ -90,43 +95,43 @@ class JcSqlGeneratorTest extends Specification{
 				myMap3.getLeadingSource() >> "LC_C";
 				1 * processor.getDependencies() >> stDeps;
 		then:	"we get sql defintions in for group definition and group parameters "
-				IMessageCollection sqlDep=params.sqlJobDependencyStatements;
-				IMessageCollection sqlGroup=params.sqlJobGroupStatements;
-				IMessageCollection sqlParameter=params.sqlJobParameterStatements;
+				IMessageCollection sqlDep=sqlDependency;
+				IMessageCollection sqlGroup=sqlGroup;
+				IMessageCollection sqlParameter=sqlJob;
 				sqlDep.getNoOfKeys()==3;
 				sqlDep.getNoOfMessagesForKey("MP_A")==3;//1 delete dependencies, add 2 dependency
 				sqlDep.getNoOfMessagesForKey("MP_B")==1;//1 delete dependencies
 				sqlDep.getNoOfMessagesForKey("MP_C")==1;//1 delete dependencies
 				sqlGroup.getNoOfKeys()==4;//one group, 3 mappings
-				sqlGroup.getNoOfMessagesForKey(params.jobGroupName)==6;//1 delete group, 1 delete, 1 create, 3 association
-				sqlGroup.getNoOfMessagesForKey("MP_A")==1;//1 merge
-				sqlGroup.getNoOfMessagesForKey("MP_B")==1;//1 merge
-				sqlGroup.getNoOfMessagesForKey("MP_C")==1;//1 merge
-				sqlParameter.getNoOfKeys()==3;//one mapping
-				sqlParameter.getNoOfMessagesForKey("MP_A")==1;//1 merge
-				sqlParameter.getNoOfMessagesForKey("MP_B")==1;//1 merge
-				sqlParameter.getNoOfMessagesForKey("MP_C")==1;//1 merge
+				sqlGroup.getNoOfMessagesForKey(params.jobGroupName)==3;//1 delete associations, 1 delete, 1 create
+				sqlGroup.getNoOfMessagesForKey("MP_A")==1;//1 association
+				sqlGroup.getNoOfMessagesForKey("MP_B")==1;//1 association
+				sqlGroup.getNoOfMessagesForKey("MP_C")==1;//1 association
+				sqlParameter.getNoOfKeys()==3;//3 mapping
+				sqlParameter.getNoOfMessagesForKey("MP_A")==2;//1 merge, 1 merge parameters
+				sqlParameter.getNoOfMessagesForKey("MP_B")==2;//1 merge, 1 merge parameters
+				sqlParameter.getNoOfMessagesForKey("MP_C")==2;//1 merge, 1 merge parameters
 		then:	"we test the queries for the group definition"
 				
 				sqlGroup.getMessagesForKey(params.jobGroupName).contains("""DELETE FROM O_LDS_META.CMT_JC_JOBGROUP where JOBGROUP_ID='$params.jobGroupName'""".toString());
 				sqlGroup.getMessagesForKey(params.jobGroupName).contains("""INSERT INTO O_LDS_META.CMT_JC_JOBGROUP(JOBGROUP_ID,JOBGROUP_DESC,JOBGROUP_ACTIVE_IND)
 VALUES('$params.jobGroupName','$params.jobGroupName','Y')""".toString()
 				);
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(
+				sqlGroup.getMessagesForKey('MP_A').contains(
 				"""INSERT INTO O_LDS_META.CMT_JC_JOBGROUP_X_JOB(JOBGROUP_ID,JOB_ID,DWH_VERSION_CD,RELEASE_CD,LINK_ACTIVE_FLAG)
 VALUES('$params.jobGroupName','MP_A','$params.dwhVersion','$params.dwhRelease','Y')""".toString()
 				);
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(
+				sqlGroup.getMessagesForKey('MP_B').contains(
 				"""INSERT INTO O_LDS_META.CMT_JC_JOBGROUP_X_JOB(JOBGROUP_ID,JOB_ID,DWH_VERSION_CD,RELEASE_CD,LINK_ACTIVE_FLAG)
 VALUES('$params.jobGroupName','MP_B','$params.dwhVersion','$params.dwhRelease','Y')""".toString()
 				);
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(
+				sqlGroup.getMessagesForKey('MP_C').contains(
 				"""INSERT INTO O_LDS_META.CMT_JC_JOBGROUP_X_JOB(JOBGROUP_ID,JOB_ID,DWH_VERSION_CD,RELEASE_CD,LINK_ACTIVE_FLAG)
 VALUES('$params.jobGroupName','MP_C','$params.dwhVersion','$params.dwhRelease','Y')""".toString()
 				);
 			
 		then:	"we test queries for job definition"
-				sqlGroup.getMessagesForKey("MP_A").contains("""MERGE INTO O_LDS_META.CMT_JC_JOB j
+				sqlParameter.getMessagesForKey("MP_A").contains("""MERGE INTO O_LDS_META.CMT_JC_JOB j
 using (
 select 'MP_A' as JOB_ID,'$params.dwhVersion' as DWH_VERSION_CD,'$params.dwhRelease' as RELEASE_CD,'MP_A' as ODI_SCENARIO_NAME,'001' as ODI_SCENARIO_VERSION
 , '0' as JOB_WEIGHT,'0'as JOB_PRIORITY,'Y' as JOB_ACTIVE_IND
@@ -195,11 +200,11 @@ when not matched then
 				IOdiMapping myMap1=Mock();
 				IOdiMapping myMap2=Mock();
 				Set<IOdiMapping> myMappings=[myMap1,myMap2];
-				params.sqlJobDependencyStatements=new MessageCollection("newTest");
-				params.sqlJobGroupStatements=params.sqlJobDependencyStatements;
-				params.sqlJobParameterStatements=params.sqlJobDependencyStatements;
+				sqlDependency=new MessageCollection("newTest");
+				sqlGroup=sqlDependency;
+				sqlJob=sqlDependency;
 		when:	"The generateSql method is called"
-				subject.generateSql(params);
+				subject.generateSql(params,sqlGroup,sqlJob,sqlDependency);
 		then:	"the interactions are as below"
 				processor.getAllMappings() >> myMappings;
 				processor.getDependencies() >> stDeps;
@@ -208,9 +213,9 @@ when not matched then
 				myMap2.getName() >> "MP_B";
 				myMap2.getLeadingSource() >> "LC_B";
 		then:	"we see check to see the sqls were generated in the same collection"
-				IMessageCollection sqlDep=params.sqlJobDependencyStatements;
-				IMessageCollection sqlGroup=params.sqlJobGroupStatements;
-				IMessageCollection sqlParameter=params.sqlJobParameterStatements;
+				IMessageCollection sqlDep=sqlDependency;
+				IMessageCollection sqlGroup=sqlGroup;
+				IMessageCollection sqlParameter=sqlJob;
 				sqlDep==sqlGroup;
 				sqlDep==sqlParameter;
 				sqlDep.getNoOfKeys()==3;//1 group, 2 mappings

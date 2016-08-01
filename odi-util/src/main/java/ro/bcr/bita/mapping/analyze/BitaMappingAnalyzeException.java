@@ -1,6 +1,6 @@
-package ro.bcr.bita.service;
+package ro.bcr.bita.mapping.analyze;
 
-public class BitaServiceException extends RuntimeException {
+public class BitaMappingAnalyzeException extends RuntimeException {
 
 	/**
 	 * 
@@ -13,7 +13,7 @@ public class BitaServiceException extends RuntimeException {
 	 * @param enableSuppression
 	 * @param writableStackTrace
 	 */
-	public BitaServiceException(String message, Throwable cause,
+	public BitaMappingAnalyzeException(String message, Throwable cause,
 			boolean enableSuppression, boolean writableStackTrace) {
 		super(message, cause, enableSuppression, writableStackTrace);
 	}
@@ -22,14 +22,14 @@ public class BitaServiceException extends RuntimeException {
 	 * @param message
 	 * @param cause
 	 */
-	public BitaServiceException(String message, Throwable cause) {
+	public BitaMappingAnalyzeException(String message, Throwable cause) {
 		super(message, cause);
 	}
 
 	/**
 	 * @param message
 	 */
-	public BitaServiceException(String message) {
+	public BitaMappingAnalyzeException(String message) {
 		super(message);
 	}
 	

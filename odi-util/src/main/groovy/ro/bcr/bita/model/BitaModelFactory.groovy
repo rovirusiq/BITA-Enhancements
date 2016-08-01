@@ -1,13 +1,6 @@
 package ro.bcr.bita.model;
 
-import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService;
-import ro.bcr.bita.odi.proxy.IOdiEntityFactory
-import ro.bcr.bita.odi.proxy.OdiPathUtil
-import ro.bcr.bita.odi.proxy.OdiProjectPaths
-import ro.bcr.bita.odi.template.IOdiCommandContext
-import ro.bcr.bita.odi.template.OdiCommandContext
-import ro.bcr.bita.service.IMappingAnalyzeProcessor
-import ro.bcr.bita.service.mapping.JcAnalyzeProcessor
+import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor
 
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
@@ -42,10 +35,6 @@ public class BitaModelFactory implements IBitaModelFactory {
 		return new MappingDependencyRepository();
 	}
 	
-	@Override
-	public IMappingAnalyzeProcessor newDependencyAnalyzeProcessor() {
-		return new JcAnalyzeProcessor(this.newMappingDeppendencyRepository());
-	}
 	
 	@Override
 	public IMessageCollection newMessageCollection(String idCollection) {

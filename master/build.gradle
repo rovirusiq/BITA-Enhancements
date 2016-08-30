@@ -27,7 +27,7 @@ apply plugin: 'distribution'
 
 
 allprojects{
-	version="1.4-RC4";
+	version="1.5-RC1";
 	apply plugin:'java'
 	apply plugin:'jacoco'
 	ext{

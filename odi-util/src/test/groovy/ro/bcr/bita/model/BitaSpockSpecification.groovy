@@ -1,6 +1,7 @@
 package ro.bcr.bita.model
 
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
+import ro.bcr.bita.odi.proxy.OdiFullMappingPath;
 import ro.bcr.bita.odi.proxy.OdiPathUtil
 import ro.bcr.bita.odi.proxy.OdiProjectPaths
 
@@ -41,6 +42,8 @@ class BitaSpockSpecification extends Specification{
 		stbOdiEntityFactory.createMappingFinder() >> stbOdiMappingFinder;
 		stbOdiEntityFactory.createProjectFolderFinder() >> stbOdiFolderFinder;
 		stbOdiEntityFactory.createProjectFinder() >> stbOdiProjectFinder;
+		
+		stbOdiEntityFactory.newOdiMappingFullPath(_ as String, _ as String, _ as String) >> {String a, String b, String c ->return new OdiFullMappingPath(a, b, c)}
 		
 	}
 

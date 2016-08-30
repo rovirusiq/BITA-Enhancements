@@ -57,11 +57,11 @@ class BitaAppFactory {
 	 *
 	 ********************************************************************************************/
 		
-	public JcStreamSqlExecutor newJcStreamSqlExecutor(String oracleServerName,Boolean applyCommits,String dwhRelease,String dwhVersion,String jobGroupName) {
+	public JcStreamSqlExecutor newJcStreamSqlExecutor(String oracleServerName,int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName) {
 		return new JcStreamSqlExecutor(createMappingDependencyRepository()
 				,newSqlExecutor(oracleServerName)
 				,newJcParameters(dwhRelease,dwhVersion,jobGroupName)
-				,applyCommits
+				,frequencyOfCommits
 				);
 	}
 	
@@ -106,7 +106,7 @@ class BitaAppFactory {
 
 	public IJcMetadataCreator newJcMetadataStreamCreator(String oracleServerName, int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName) {
 		return new JcMetadataStreamCreator(
-			newJcStreamSqlExecutor(oracleServerName,frequencyOfCommits>0,dwhRelease,dwhVersion,jobGroupName)
+			newJcStreamSqlExecutor(oracleServerName,frequencyOfCommits,dwhRelease,dwhVersion,jobGroupName)
 			,newMappingAnalyzerService()
 			);
 		

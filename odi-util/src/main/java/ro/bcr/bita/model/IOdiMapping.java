@@ -10,5 +10,6 @@ public interface IOdiMapping {
 	public List<String> identifySources() throws BitaModelException;
 	public String identifyTarget() throws BitaModelException;
 	public String getLeadingSource() throws BitaModelException;
+	public String getFullPathName() throws BitaModelException;
 
 }

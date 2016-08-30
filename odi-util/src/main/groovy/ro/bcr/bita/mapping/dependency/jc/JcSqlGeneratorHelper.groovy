@@ -107,7 +107,11 @@ class JcSqlGeneratorHelper{
 	 ********************************************************************************************/
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlDepCleanup(JcParameters params,String mappingName) {
-		return this.getTemplateForSqlDependencyInit().make([mappingName:mappingName]).toString()
+		return this.getTemplateForSqlDependencyInit().make([
+				mappingName:mappingName
+				,dwhVersion:params.dwhVersion
+				,dwhRelease:params.dwhRelease
+				]).toString()
 	}
 	
 	@TypeChecked(TypeCheckingMode.SKIP)

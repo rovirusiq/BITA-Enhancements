@@ -34,13 +34,14 @@ class OdiPathUtil {
 	protected List<String> checkSyntax(String p) {
 		List<String> rsp=[];
 		
-		Matcher m=p=~ /^(\+|\-)?([a-zA-Z0-9_]+)(?::([a-zA-Z0-9_]+))?$/;
+		Matcher m=p=~ /^(\+|\-)?([a-zA-Z0-9_]+)(?::([a-zA-Z0-9_]+))?(?::([a-zA-Z0-9_]+))?$/;
 		
 		if (m.matches()) {
 			
 			rsp << (m.group(1)? m.group(1):"+");
 			rsp << m.group(2);
 			rsp << (m.group(3)? m.group(3):"");
+			rsp << (m.group(4)? m.group(4):"");
 			
 		}
 		return rsp;
@@ -99,10 +100,12 @@ class OdiPathUtil {
 	 * @throws BitaOdiException
 	 */
 	//TODO make it more performant. Also maybe implement a cache for already retrieved project folders.
+	//TODO make it more performant. Do not doble check the paths, because of the full paths. Maybe do a split before them in the method wrapper above
 	public IOdiProjectPaths extractProjectPaths(String... paths) throws BitaOdiException{
 		//List<String> faultyPaths=[];
 		Map<String,Set<String>> includePaths=[:];
 		Map<String,Set<String>> excludePaths=[:];
+		
 		
 		for (String p:paths) {
 			List<String> lst=this.checkSyntax(p);
@@ -110,6 +113,11 @@ class OdiPathUtil {
 			//check if the path was invalid
 			if (lst.size()<=0){
 				//faultyPaths<<p;
+				continue;
+			}
+			
+			//check if it is full path. This we skeep in this method
+			if ((lst.size()>=4) && (!lst[3].equals("")) ) {
 				continue;
 			}
 			
@@ -142,6 +150,30 @@ class OdiPathUtil {
 			}
 		}
 		return this.odiEntityFactory.newOdiProjectPaths(includePaths);
+	}
+	
+	public void populateMappingDetails() {
+		
+	}
+	
+	public void populateFullOdiMappingPaths(Set<IOdiFullMappingPath> includedMappings,Set<IOdiFullMappingPath> excludedMappings,String... paths) throws BitaOdiException{
+		
+		if ((includedMappings==null) || (excludedMappings==null)) throw new BitaOdiException("The parameters for includedmMppings and excludedMappings cannot be null. Please see OdiPathUtil.extractFullOdiMappingPaths");
+		
+		for (String p:paths) {
+			List<String> lst=this.checkSyntax(p);
+			//we want only FULL PATHS
+			if (lst.size()<4) continue;
+			
+			//we want only FULL PATHS
+			if (lst[3].equals("")) continue;
+			
+			if (lst[0].equals("+")) {
+				includedMappings.add(odiEntityFactory.newOdiMappingFullPath(lst[1],lst[2],lst[3]));
+			} else if (lst[0].equals("-")) {
+				excludedMappings.add(odiEntityFactory.newOdiMappingFullPath(lst[1],lst[2],lst[3]));
+			} 
+		}
 	}
 
 }

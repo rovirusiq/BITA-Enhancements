@@ -10,7 +10,6 @@ import oracle.odi.domain.mapping.IMapComponent
 import oracle.odi.domain.mapping.Mapping
 import oracle.odi.domain.mapping.physical.MapPhysicalNode
 
-//TODO sa adaug exceptiile la defintitia interfetei si a clasei
 @TypeChecked
 class OdiMapping implements IOdiMapping {
 	
@@ -73,7 +72,8 @@ class OdiMapping implements IOdiMapping {
 		  
 		  if (isDataStorage){
 		   
-			  String lName=lComponent.getBoundObjectName()
+			  String lName=lComponent.getBoundObjectName();
+			  if (lName==null) throw new BitaModelException("No Bound Object for DataStorage["+lComponent+"] can be identified in map:"+this.getName()); 
 			  
 			  if (isSource) {
 				  this.addToSourceTables(lName);
@@ -146,6 +146,17 @@ class OdiMapping implements IOdiMapping {
 	}
 	public Mapping getUnderlyingOdiObject() {
 		return this.odiObject;
+	}
+
+	@Override
+	public String getFullPathName() throws BitaModelException {
+		String rsp="";
+		try {
+			rsp=this.odiObject.getProject().getName()+"/"+this.odiObject.getParentFolder().getName()+"/"+this.getName();
+		} catch (Exception ex) {
+			throw new BitaModelException("An exception occured when calculaitng the full name of the mapping",ex);
+		}
+		return rsp;
 	}
 
 

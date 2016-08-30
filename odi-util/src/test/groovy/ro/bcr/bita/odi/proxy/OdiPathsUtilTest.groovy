@@ -39,16 +39,18 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				List<String> rsp=subject.checkSyntax(inputString);
 		
 		then:	"The response indicates is a include path"
-				rsp.size()==3
+				rsp.size()==4
 				rsp[0]==firstElement
 				rsp[1]==secondElement;
 				rsp[2]==thirdElement;
+				rsp[3]==forthElement;
 				
 		where:	"data used is"
-				inputString|firstElement|secondElement|thirdElement
-				"+PRJ_CODE:F_NAME"|"+"|"PRJ_CODE"|"F_NAME"
-				"PRJCODE:FNAME"|"+"|"PRJCODE"|"FNAME"
-				"-PrjC001:f45N"|"-"|"PrjC001"|"f45N"
+				inputString|firstElement|secondElement|thirdElement|forthElement
+				"+PRJ_CODE:F_NAME"|"+"|"PRJ_CODE"|"F_NAME"|""
+				"PRJCODE:FNAME"|"+"|"PRJCODE"|"FNAME"|""
+				"-PrjC001:f45N"|"-"|"PrjC001"|"f45N"|""
+				"-PrjC001:fA:M1_X"|"-"|"PrjC001"|"fA"|"M1_X"
 	}
 	
 	@Unroll
@@ -64,6 +66,7 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				"PRJ_CODE:C@VA"|_
 				"PRJ_CODEC@VA"|_
 				"PRJ VA"|_
+				"PRJ VA:CUTU:CVB"|_
 	}
 	
 	def "Retrieve folders from an ODI project with 0 folers"(){

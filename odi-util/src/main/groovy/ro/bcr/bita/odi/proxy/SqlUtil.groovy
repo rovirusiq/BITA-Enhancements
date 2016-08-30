@@ -13,6 +13,8 @@ import oracle.odi.domain.topology.finder.IOdiLogicalSchemaFinder;
 import groovy.sql.Sql
 import groovy.transform.CompileStatic;
 
+//TODO sa caut in contextul default
+
 @CompileStatic
 class SqlUtil {
 	

@@ -147,9 +147,10 @@ when not matched then
 	insert (job_id,dwh_version_cd,release_cd,ODI_SCENARIO_NAME,ODI_SCENARIO_VERSION,JOB_WEIGHT,JOB_PRIORITY,JOB_ACTIVE_IND,AUTO_RESTART_IND,AUTO_RESTART_RETRIES_NO,AUTO_RESTART_WAIT_SECS,AUTO_RESTART_ERROR_CONDITION,JOB_START_CONDITION)  
 		values (n.job_id,n.dwh_version_cd,n.release_cd,n.ODI_SCENARIO_NAME,n.ODI_SCENARIO_VERSION,n.JOB_WEIGHT,n.JOB_PRIORITY,n.JOB_ACTIVE_IND,n.AUTO_RESTART_IND,n.AUTO_RESTART_RETRIES_NO,n.AUTO_RESTART_WAIT_SECS,n.AUTO_RESTART_ERROR_CONDITION,n.JOB_START_CONDITION)""".toString()
 				);
-			
+				String calculatedSQL="DELETE FROM O_LDS_META.CMT_JC_JOB_DEPENDENCY where DEPENDENT_JOB_ID='MP_A' and CMT_DWH_VERSION_CD='${params.dwhVersion}' and CMT_RELEASE_CD='${params.dwhRelease}'";
 		then:	"we test the queries for the dependencies of MP_A"
-				sqlDep.getMessagesForKey("MP_A").contains("""DELETE FROM O_LDS_META.CMT_JC_JOB_DEPENDENCY where JOB_ID='MP_A'""");
+				//sqlDep.getMessagesForKey("MP_A").contains("""DELETE FROM O_LDS_META.CMT_JC_JOB_DEPENDENCY where DEPENDENT_JOB_ID='MP_A' and CMT_DWH_VERSION_CD='${params.dwhVersion}' and CMT_RELEASE_CD='${params.dwhRelease}'""");	
+				sqlDep.getMessagesForKey("MP_A").contains(calculatedSQL);
 				sqlDep.getMessagesForKey("MP_A").contains("""INSERT INTO O_LDS_META.CMT_JC_JOB_DEPENDENCY (JOB_ID,DWH_VERSION_CD,RELEASE_CD,DEPENDENT_JOB_ID,CMT_DWH_VERSION_CD,CMT_RELEASE_CD,DEPENDENCY_ACTIVE_IND)
 VALUES('MP_B','${params.dwhVersion}','${params.dwhRelease}','MP_A','${params.dwhVersion}','${params.dwhRelease}','Y')""".toString());
 				sqlDep.getMessagesForKey("MP_A").contains("""INSERT INTO O_LDS_META.CMT_JC_JOB_DEPENDENCY (JOB_ID,DWH_VERSION_CD,RELEASE_CD,DEPENDENT_JOB_ID,CMT_DWH_VERSION_CD,CMT_RELEASE_CD,DEPENDENCY_ACTIVE_IND)

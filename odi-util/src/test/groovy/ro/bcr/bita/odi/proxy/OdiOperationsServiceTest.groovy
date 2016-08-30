@@ -74,6 +74,38 @@ class OdiOperationsServiceTest extends BitaSpockSpecification {
 	}
 	
 	
+	
+	def "Find Mappings - different include FULL paths and exclude FULL paths"(){
+		given:	"several projects with folders, but no mappings"
+				
+				Mapping m1=BITA_MOCK_ODI_MAPPING("M1");
+				Mapping m2=BITA_MOCK_ODI_MAPPING("M2");
+				Mapping m3=BITA_MOCK_ODI_MAPPING("M3");
+				Mapping m4=BITA_MOCK_ODI_MAPPING("M4");
+				Mapping m5=BITA_MOCK_ODI_MAPPING("M5");
+				Mapping m6=BITA_MOCK_ODI_MAPPING("M6");
+				Mapping m8=BITA_MOCK_ODI_MAPPING("M7");
+				Mapping m9=BITA_MOCK_ODI_MAPPING("M9");
+				Mapping m10=BITA_MOCK_ODI_MAPPING("M10");
+				Mapping m11=BITA_MOCK_ODI_MAPPING("M11");
+		
+				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_1") >> [m1,m2];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_1") >> [m8];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_2") >> [m4,m5,m3,m9];
+				stbOdiMappingFinder.findByName("M10","PRJ_B","FOLDER_3") >> [m10];
+		when:	"find mappings is called with the project paths from above"
+				List<IOdiMapping> rsp=subject.findMappings("+PRJ_A:FOLDER_1","PRJ_B:FOLDER_2","-PRJ_B:FOLDER_2:M5","+PRJ_B:FOLDER_1:M7","+PRJ_B:FOLDER_3:M10");
+		then:	"a list with maps is returned. M5 is exclued, M7 is not added because it does not exist in that folder, M10 is added because it exists in the specified folder"
+				rsp!=null;
+				rsp.size()==6;
+				
+		
+	}
+	
+	
+	
+	
+	
 	def "Find Mappings - different include and exclude paths"(){
 		given:	"several projects with folders, with different mappings"
 				

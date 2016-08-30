@@ -7,6 +7,7 @@ import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.MappingDependency;
 import ro.bcr.bita.model.MappingDependencyRepository
+import ro.bcr.bita.odi.proxy.BitaOdiException;
 
 import groovy.transform.CompileStatic;
 
@@ -22,11 +23,15 @@ class MappingAnalyzeDependencyProcessor implements IMappingAnalyzeProcessor{
 
 	@Override
 	public void processMapping(IOdiMapping mapping) {
-		mapping.identifySources().each{String tblName->
-			repo.addTableToMapping(tblName,mapping.getName());
+		try {
+			mapping.identifySources().each{String tblName->
+				repo.addTableToMapping(tblName,mapping.getName());
+			}
+			this.repo.addMappingToTable(mapping.getName(),mapping.identifyTarget());
+			this.allMappings << mapping;
+		} catch (Exception ex) {
+			throw new BitaOdiException("An unexpected exception was encountered when processing the mapping: ${mapping}", ex);
 		}
-		this.repo.addMappingToTable(mapping.getName(),mapping.identifyTarget());
-		this.allMappings << mapping;
 	}
 	
 	public Set<MappingDependency> getDependencies(){

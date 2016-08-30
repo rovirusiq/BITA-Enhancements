@@ -75,6 +75,10 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 			
 			List<IOdiMapping> mps=[];
 			
+			Set<IOdiFullMappingPath> includedMappings=[];
+			Set<IOdiFullMappingPath> excludedMappings=[];
+			
+			this.odiPathUtils.populateFullOdiMappingPaths(includedMappings,excludedMappings,odiPaths);
 			
 			IMappingFinder finder=this.odiEntityFactory.createMappingFinder();
 			
@@ -82,9 +86,30 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 				
 				for (String folder:rsp.getFoldersForProject(prj)) {
 				
-					mps << (finder.findByProject(prj,folder).collect{bitaModelFactory.newOdiMapping(it)});
+					mps << (finder.findByProject(prj,folder).collect{
+								IOdiFullMappingPath p=this.odiEntityFactory.newOdiMappingFullPath(prj,folder,it.getName());
+								
+								if (includedMappings.contains(p)) {
+									includedMappings=includedMappings-p;
+								}
+								
+								if (!excludedMappings.contains(p)) {
+									return bitaModelFactory.newOdiMapping(it);
+									
+								} else {
+									return [];
+								}
+							});
 				}
 			}
+			
+			for (IOdiFullMappingPath mp:includedMappings) {
+				Collection c=finder.findByName(mp.getMappingName(),mp.getProjectCode(),mp.getFolderName());
+				if (c.size()==1) {
+					mps << bitaModelFactory.newOdiMapping(c.getAt(0));
+				} else if (c.size()>1) throw new BitaOdiException("Multiple mappinggs with the same name in the same project and the same fodler [${mp.getProjectCode()}:${mp.getMappingName()}:${mp.getFolderName()}]");
+			}
+			
 			
 			return mps.flatten();
 		} catch (Exception ex) {

@@ -53,4 +53,6 @@ public interface IOdiEntityFactory {
 	public abstract IOdiCommandContext newOdiTemplateCommandContext();
 	
 	public abstract OdiBasicTemplate newOdiTemplate();
+	
+	public abstract IOdiFullMappingPath newOdiMappingFullPath(String projectCode,String folderName,String mappingName);
 }

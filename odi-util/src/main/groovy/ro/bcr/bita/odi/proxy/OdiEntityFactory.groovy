@@ -241,6 +241,12 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		return new OdiBasicTemplate(this);
 	}
 	
+	@Override
+	@TypeChecked
+	public IOdiFullMappingPath newOdiMappingFullPath(String projectCode,String folderName,String mappingName) {
+		return new OdiFullMappingPath(projectCode, folderName, mappingName);
+	}
+	
 	/********************************************************************************************
 	 *
 	 *Own Instance methods

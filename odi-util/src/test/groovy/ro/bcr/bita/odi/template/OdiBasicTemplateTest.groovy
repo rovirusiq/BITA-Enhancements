@@ -87,15 +87,18 @@ class OdiBasicTemplateTest extends Specification{
 		given: """A bunch of objects need to create an OdiTemplate.
 				The objects are created in the setup method"""
 				def contextReceived=null;
-				OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mFullOdiFactory);
-				mFullContext.getOdiEntityFactory() >> {return mFullOdiFactory};
-				mFullOdiFactory.newOdiTemplateCommandContext() >> mFullContext;
-				mCommand.execute(_ as IOdiCommandContext) >> {arg-> contextReceived=arg[0];};
+				def odiEntFact=null;
 		when:	"The OdiTemplate is build and you execute a command"
+				OdiBasicTemplate odiTmpl=new OdiBasicTemplate(mFullOdiFactory);
 				odiTmpl.executeWithoutTransaction(mCommand);
+				odiEntFact=((OdiCommandContext)contextReceived).getOdiEntityFactory();
 		then:	"You have access to th econtext and the context gives you access to the odiEntityFactory"
+				_*mFullContext.getOdiEntityFactory() >> mFullOdiFactory;
+				_*mFullOdiFactory.newOdiTemplateCommandContext() >> mFullContext;
+				_*mCommand.execute(_ as IOdiCommandContext) >> {arg-> contextReceived=arg[0];};
 				contextReceived instanceof OdiCommandContext;
-				contextReceived==mFullContext;
-				mFullOdiFactory.equals(contextReceived.getOdiEntityFactory());
+				contextReceived.equals(mFullContext);
+				odiEntFact.equals(mFullOdiFactory);
+			
 	}
 }

@@ -27,9 +27,13 @@ apply plugin: 'distribution'
 
 
 allprojects{
-	version="1.5-RC1";
+	version="1.5-RC3";
 	apply plugin:'java'
 	apply plugin:'jacoco'
+	
+	sourceCompatibility=1.7;
+	targetCompatibility=1.7;
+	
 	ext{
 		prefixFromMasterProject="bitae-";
 		sfl4jVersion="1.7.12";

@@ -1,6 +1,6 @@
 MERGE INTO O_LDS_META.CMT_JC_JOB j
 using (
-select '$mappingName' as JOB_ID,'$dwhVersion' as DWH_VERSION_CD,'$dwhRelease' as RELEASE_CD,'$mappingName' as ODI_SCENARIO_NAME,'001' as ODI_SCENARIO_VERSION
+select '$jobId' as JOB_ID,'$dwhVersion' as DWH_VERSION_CD,'$dwhRelease' as RELEASE_CD,'$mappingName' as ODI_SCENARIO_NAME,'$mappingScenarioVersion' as ODI_SCENARIO_VERSION
 , '0' as JOB_WEIGHT,'0'as JOB_PRIORITY,'Y' as JOB_ACTIVE_IND
 , 'N' as AUTO_RESTART_IND
 , 0 as AUTO_RESTART_RETRIES_NO

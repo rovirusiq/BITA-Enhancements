@@ -1,2 +1,2 @@
 INSERT INTO O_LDS_META.CMT_JC_JOBGROUP_X_JOB(JOBGROUP_ID,JOB_ID,DWH_VERSION_CD,RELEASE_CD,LINK_ACTIVE_FLAG)
-VALUES('$jobGroupName','$mappingName','$dwhVersion','$dwhRelease','Y')
+VALUES('$jobGroupName','$jobId','$dwhVersion','$dwhRelease','Y')

@@ -15,6 +15,40 @@ class OdiPathUtil {
 	
 	private IOdiEntityFactory odiEntityFactory;
 	
+	
+	
+	private static class MappingPaths{
+		private final IOdiProjectPaths projectPaths;
+		private final Set<IOdiFullMappingPath> includeMappings;
+		private final Set<IOdiFullMappingPath> excludeMappings;
+		
+		MappingPaths(IOdiProjectPaths pProjectPaths,Set<IOdiFullMappingPath> pIncludeMappings,Set<IOdiFullMappingPath> pExcludeMappings) {
+			this.projectPaths=pProjectPaths;
+			this.includeMappings=pIncludeMappings;
+			this.excludeMappings=pExcludeMappings;
+		}
+		
+		/**
+		 * @return the projectPaths
+		 */
+		public IOdiProjectPaths getProjectPaths() {
+			return projectPaths;
+		}
+		/**
+		 * @return the includedMappings
+		 */
+		public Set<IOdiFullMappingPath> getIncludeMappings() {
+			return includeMappings;
+		}
+		/**
+		 * @return the excludeMappings
+		 */
+		public Set<IOdiFullMappingPath> getExcludeMappings() {
+			return excludeMappings;
+		}
+		
+	}
+	
 	/**
 	 * @param odiEntityFactory
 	 */
@@ -94,86 +128,94 @@ class OdiPathUtil {
 	 * <li>+|- Sign that will tell if the path should be included or excluded. If no sign is provided + is default.</li>
 	 * <li>PROJECT_CODE - The code of the project. It is mandatory</li>
 	 * <li>FOLDER_NAME - The name of the folder. Optional</li>
-	 * </ul> 
+	 * </ul>
 	 * @return A HashMap wit details about the paths that should be inspected. The key it will be the project and the value will be a Set of folder names. If the parameters do not
 	 * contain the folders explicit the method will retrieve the folders.
 	 * @throws BitaOdiException
 	 */
+	//TODO return also faultypaths if parameter is provided
 	//TODO make it more performant. Also maybe implement a cache for already retrieved project folders.
-	//TODO make it more performant. Do not doble check the paths, because of the full paths. Maybe do a split before them in the method wrapper above
-	public IOdiProjectPaths extractProjectPaths(String... paths) throws BitaOdiException{
-		//List<String> faultyPaths=[];
+	public MappingPaths extractMappingPaths(String... odiPaths) {
+		
 		Map<String,Set<String>> includePaths=[:];
 		Map<String,Set<String>> excludePaths=[:];
 		
+		Set<IOdiFullMappingPath> includeMappings=[];
+		Set<IOdiFullMappingPath> excludeMappings=[];
 		
-		for (String p:paths) {
+		for (String p:odiPaths) {
 			List<String> lst=this.checkSyntax(p);
 			
 			//check if the path was invalid
 			if (lst.size()<=0){
-				//faultyPaths<<p;
 				continue;
-			}
-			
-			//check if it is full path. This we skeep in this method
+			}			
 			if ((lst.size()>=4) && (!lst[3].equals("")) ) {
-				continue;
+				IOdiFullMappingPath mp=this.odiEntityFactory.newOdiMappingFullPath(lst[1],lst[2],lst[3]);
+				if (lst[0]=="+") {
+					includeMappings.add(mp);
+				} else if (lst[0]=="-") {
+					excludeMappings.add(mp);
+				} 
+				
+			} else {
+				if (lst[0]=="+") {
+					populateMapPaths(includePaths,lst);
+				} else if (lst[0]=="-") {
+					populateMapPaths(excludePaths,lst);
+				}
 			}
-			
-			if (lst[0]=="+") {
-				populateMapPaths(includePaths,lst);
-			}
-			if (lst[0]=="-") {
-				populateMapPaths(excludePaths,lst);
-			}	
-			
 		}
 		
-		//combine include and exclude paths. Exclude is more powerful. Exclude entire projects if they have no folders.
+		includeMappings=includeMappings-excludeMappings;
+		if (includeMappings==null) includeMappings=[];
+		
+		/*
+		 * combine include and exclude paths. Exclude is more powerful. Exclude entire projects if they have no folders.
+		 */
+		
+		
+		//check not to have an included Mapping in an already excluded Folder
+		//check not to have an include Mapping in an already included Folder
+		Set<IOdiFullMappingPath> faultyIncludeMappings=[];
+		for (IOdiFullMappingPath ep:includeMappings) {
+			String projectCode=ep.getProjectCode();
+			Set<String> foldersExcluded=excludePaths.get(projectCode);
+			if ((foldersExcluded!=null) && (foldersExcluded.size()>0)  && (foldersExcluded.contains(ep.getFolderName())) ){
+				faultyIncludeMappings << ep;
+			}
+			Set<String> foldersIncluded=includePaths.get(projectCode);
+			if ((foldersIncluded!=null) && (foldersIncluded.size()>0)  && (foldersIncluded.contains(ep.getFolderName())) ){
+				faultyIncludeMappings << ep;
+			}
+		}
+		
+		
+		includeMappings=includeMappings-faultyIncludeMappings;
+		
 		Set<String> keys=[];
 		keys.addAll(includePaths.keySet());
-		
 		
 		for (int i=0;i<keys.size();i++) {
 			String k=keys[i];
 			
 			Set<String> includeP=includePaths.get(k);
-			Set<String> excludeP=excludePaths.get(k); 
+			Set<String> excludeP=excludePaths.get(k);
 			
 			if ((excludeP!=null) && (includeP!=null)) {
 				includeP=includeP-excludeP;
 				includePaths.put(k,includeP);
 			}
+			
+			//check is something remain from the folder
 			if ((includeP==null) || (includeP.size()<=0)) {
 				includePaths.remove(k);
 			}
 		}
-		return this.odiEntityFactory.newOdiProjectPaths(includePaths);
+		
+		MappingPaths rsp=new MappingPaths(this.odiEntityFactory.newOdiProjectPaths(includePaths),includeMappings,excludeMappings);
+		return rsp;
 	}
 	
-	public void populateMappingDetails() {
-		
-	}
-	
-	public void populateFullOdiMappingPaths(Set<IOdiFullMappingPath> includedMappings,Set<IOdiFullMappingPath> excludedMappings,String... paths) throws BitaOdiException{
-		
-		if ((includedMappings==null) || (excludedMappings==null)) throw new BitaOdiException("The parameters for includedmMppings and excludedMappings cannot be null. Please see OdiPathUtil.extractFullOdiMappingPaths");
-		
-		for (String p:paths) {
-			List<String> lst=this.checkSyntax(p);
-			//we want only FULL PATHS
-			if (lst.size()<4) continue;
-			
-			//we want only FULL PATHS
-			if (lst[3].equals("")) continue;
-			
-			if (lst[0].equals("+")) {
-				includedMappings.add(odiEntityFactory.newOdiMappingFullPath(lst[1],lst[2],lst[3]));
-			} else if (lst[0].equals("-")) {
-				excludedMappings.add(odiEntityFactory.newOdiMappingFullPath(lst[1],lst[2],lst[3]));
-			} 
-		}
-	}
 
 }

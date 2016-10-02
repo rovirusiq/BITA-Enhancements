@@ -55,6 +55,27 @@ class OdiMapping implements IOdiMapping {
 	}
 	
 	
+	protected void analyzeLeadingSource() {
+		if (this.sourceTables.size()==1) {
+			this.setLeadingSource(this.sourceTables[0]);
+			return;
+		}
+		
+		String mappingName=this.getName();
+		for (String lName:this.sourceTables) {
+			String name2=lName;
+			for (String x:["LZ_","LC_","TEMP_","ST_"]) {
+				if (name2.indexOf(x)==0) {
+					name2=name2-x;
+					break;
+				}
+			}
+			if (this.getName().indexOf(name2)==4) {
+				this.setLeadingSource(lName);
+			}
+		}
+	}
+	
 	protected void analyze() throws BitaModelException {
 		if (this.isAnalyzed) return;
 		
@@ -73,6 +94,9 @@ class OdiMapping implements IOdiMapping {
 		  if (isDataStorage){
 		   
 			  String lName=lComponent.getBoundObjectName();
+			  if (lName.startsWith("#")) {//IF IT IS FILE
+				  lName=lComponent.getName();
+			  }
 			  if (lName==null) throw new BitaModelException("No Bound Object for DataStorage["+lComponent+"] can be identified in map:"+this.getName()); 
 			  
 			  if (isSource) {
@@ -84,9 +108,7 @@ class OdiMapping implements IOdiMapping {
 						  break;
 					  }
 				  }
-				  if (this.getName().indexOf(name2)==4) {
-					  this.setLeadingSource(lName);
-				  }
+				  
 				  
 			  }
 			  if (isTarget) {
@@ -101,6 +123,7 @@ class OdiMapping implements IOdiMapping {
 		
 		if (this.sourceTables.size()<=0) throw new BitaModelException("No source table was identified for the mapping mapping[${this.odiObject.name}]");
 		if (counterForTarget<=0) throw new BitaModelException("No target table was identified for the mapping[${this.odiObject.name}]");
+		this.analyzeLeadingSource();
 		this.isAnalyzed=true;
 	}
 	/********************************************************************************************

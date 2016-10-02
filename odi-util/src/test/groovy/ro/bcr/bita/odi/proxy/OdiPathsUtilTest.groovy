@@ -8,6 +8,7 @@ import ro.bcr.bita.odi.proxy.BitaOdiException;
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
 import ro.bcr.bita.odi.proxy.IOdiProjectPaths;
 import ro.bcr.bita.odi.proxy.OdiPathUtil;
+import ro.bcr.bita.odi.proxy.OdiPathUtil.MappingPaths;
 
 import spock.lang.Specification
 import spock.lang.Unroll;
@@ -27,6 +28,10 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 		
 		mOdiEntityFactory.newOdiProjectPaths(_ as Map)>> {Map x->
 			return new OdiProjectPaths(x);
+		}
+		
+		mOdiEntityFactory.newOdiMappingFullPath(_ as String,_ as String,_ as String) >> {String a, String b,String c->
+			return new OdiFullMappingPath(a,b,c);
 		}
 		
 		subject=new OdiPathUtil(mOdiEntityFactory);
@@ -167,7 +172,7 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				mapPaths.get("PRJ3").size()==2;
 	}
 	
-	def "Extract Paths-Empty parameter"(){
+	def "Extract Mapping Paths-Empty parameter"(){
 		given:	"several projects and their folders"
 		
 				OdiFolder fX=BITA_MOCK_ODI_FOLDER(NAME:"FX");
@@ -180,14 +185,15 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"no parameter specifed as paths"
-				IOdiProjectPaths rsp=subject.extractProjectPaths();
+				MappingPaths rsp=subject.extractMappingPaths();
 		then:	"the reposnse has o paths in it"
 				rsp!=null;
-				rsp.getProjects().size()==0;
+				rsp.getProjectPaths()!=null;
+				rsp.getProjectPaths().getProjects().size()==0;
 		
 	}
 	
-	def "Extract Paths-Test concatenation"(){
+	def "Extract Mapping Paths-Test reponse aggregation"(){
 		given:	"several projects and their folders"
 		
 				OdiFolder fX=BITA_MOCK_ODI_FOLDER(NAME:"FX");
@@ -200,29 +206,42 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"multile paths specified"
-				IOdiProjectPaths rsp=subject.extractProjectPaths(
-					"+PRJ1",
-					"PRJ2:FZ",
-					"+PRJ3:FC",
-					"PRJ2",
-					"+PRJ3"
+				MappingPaths rsp=subject.extractMappingPaths(
+					"+PRJ1"
+					,"PRJ2:FZ"
+					,"+PRJ3:FC"
+					,"PRJ2"
+					,"+PRJ3"
+					,"PRJ4:XX:M_1"
+					,"+PRJ5:XY:M_2"
+					,"-PRJ4:XX:M_3"
 				);
+				IOdiFullMappingPath mp1=mOdiEntityFactory.newOdiMappingFullPath("PRJ4","XX","M_1");
+				IOdiFullMappingPath mp2=mOdiEntityFactory.newOdiMappingFullPath("PRJ5","XY","M_2");
+				IOdiFullMappingPath mp3=mOdiEntityFactory.newOdiMappingFullPath("PRJ4","XX","M_3");
 		then:	"we will have an anser"
 				rsp!=null;
+				rsp.getProjectPaths()!=null;
 		then:	"we will not have projects with no folders"
-				!rsp.getProjects().contains("PRJ1");
+				!rsp.getProjectPaths().getProjects().contains("PRJ1");
 		then:	"the concatenation will be calculated correctly for the other projects"
-				rsp.getFoldersForProject("PRJ2").containsAll("FX","FY","FZ");
-				rsp.getFoldersForProject("PRJ2").size()==3;
+				rsp.getProjectPaths()getFoldersForProject("PRJ2").containsAll("FX","FY","FZ");
+				rsp.getProjectPaths().getFoldersForProject("PRJ2").size()==3;
 				
-				rsp.getFoldersForProject("PRJ3").containsAll("FA","FB","FC");
-				rsp.getFoldersForProject("PRJ3").size()==3;
+				rsp.getProjectPaths().getFoldersForProject("PRJ3").containsAll("FA","FB","FC");
+				rsp.getProjectPaths().getFoldersForProject("PRJ3").size()==3;
 		then:	"it contains only those projects"
-				rsp.getProjects().containsAll("PRJ2","PRJ3");
-				rsp.getProjects().size()==2;
+				rsp.getProjectPaths().getProjects().containsAll("PRJ2","PRJ3");
+				rsp.getProjectPaths().getProjects().size()==2;
+		then:	"full path to be included Mappings are in results"
+				rsp.getIncludeMappings().containsAll(mp1,mp2);
+				rsp.getIncludeMappings().size()==2;
+		then:	"full path to be excluded Mappings are in results"
+				rsp.getExcludeMappings().containsAll(mp3);
+				rsp.getExcludeMappings().size()==1;
 	}
 	
-	def "Extract Paths-Test path arithemetics"(){
+	def "Extract Mapping Paths-Test path arithemetics"(){
 		given:	"several projects and their folders"
 		
 				OdiFolder fX=BITA_MOCK_ODI_FOLDER(NAME:"FX");
@@ -236,7 +255,7 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
 				
 		when:	"multile paths specified"
-				IOdiProjectPaths rsp=subject.extractProjectPaths(
+				MappingPaths rsp=subject.extractMappingPaths(
 					"+PRJ1"
 					,"PRJ2:FZ"
 					,"+PRJ3:FC"
@@ -246,22 +265,111 @@ class OdiPathsUtilTest extends BitaSpockSpecification {
 					,"+PRJ1:CUTU"
 					,"-PRJ1:CUTU2"
 					,"-PRJ1:CUTU"
+					,"+PRJ2:FX:M_1"
+					,"+PRJ3:FC:M_2"
+					,"-PRJ3:XX:M_3"
+					,"+PRJ4:ZA:M_4"
+					,"+PRJ4:ZB:M_5"
 					
 				);
-		then:	"we will have an anser"
+				IOdiFullMappingPath mp1=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FX","M_1");
+				IOdiFullMappingPath mp2=mOdiEntityFactory.newOdiMappingFullPath("PRJ3","FC","M_2");
+				IOdiFullMappingPath mp3=mOdiEntityFactory.newOdiMappingFullPath("PRJ3","XX","M_3");
+				IOdiFullMappingPath mp4=mOdiEntityFactory.newOdiMappingFullPath("PRJ4","ZA","M_4");
+				IOdiFullMappingPath mp5=mOdiEntityFactory.newOdiMappingFullPath("PRJ4","ZB","M_5");
+		then:	"we will have an answer"
 				rsp!=null;
+				rsp.getProjectPaths()!=null;
 		then:	"we will not have projects with no folders"
-				!rsp.getProjects().contains("PRJ1");
+				!rsp.getProjectPaths().getProjects().contains("PRJ1");
 		then:	"the concatenation will be calculated correctly for the other projects"
-				rsp.getFoldersForProject("PRJ2").containsAll("FZ");
-				rsp.getFoldersForProject("PRJ2").size()==1;
+				rsp.getProjectPaths().getFoldersForProject("PRJ2").containsAll("FZ");
+				rsp.getProjectPaths().getFoldersForProject("PRJ2").size()==1;
 
-				rsp.getFoldersForProject("PRJ3").containsAll("FA","FB","FC");
-				rsp.getFoldersForProject("PRJ3").size()==3;
+				rsp.getProjectPaths().getFoldersForProject("PRJ3").containsAll("FA","FB","FC");
+				rsp.getProjectPaths().getFoldersForProject("PRJ3").size()==3;
 		then:	"it contains only those projects"
-				rsp.getProjects().containsAll("PRJ2","PRJ3");
-				rsp.getProjects().size()==2;
+				rsp.getProjectPaths().getProjects().containsAll("PRJ2","PRJ3");
+				rsp.getProjectPaths().getProjects().size()==2;
+		then:	"it excludes the included Mappings that have the path excluded"
+				!rsp.getIncludeMappings().contains(mp1);
+		then: 	"it excludes the included Mappings that have a path already included"
+				!rsp.getIncludeMappings().contains(mp2);
+		then: 	"it keps the full path included Mappings that have been provided and are not reason for elimination"
+				rsp.getIncludeMappings().containsAll(mp4,mp5);
+				rsp.getIncludeMappings().size()==2;
+		then: 	"it keeps the full path exclude Mappings as they were provided "
+				rsp.getExcludeMappings().contains(mp3);
+				rsp.getExcludeMappings().size()==1;
 	}
-
+	
+	
+	def "Extract Mapping Paths - One explicit exclusion of an implicit inclusion"(){
+		given:	"several projects and their folders"
+		
+				OdiFolder fX=BITA_MOCK_ODI_FOLDER(NAME:"FX");
+				OdiFolder fY=BITA_MOCK_ODI_FOLDER(NAME:"FY");
+				OdiFolder fA=BITA_MOCK_ODI_FOLDER(NAME:"FA");
+				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
+		
+		
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				
+		when:	"multile paths specified"
+				MappingPaths rsp=subject.extractMappingPaths(
+					"PRJ2:FA:M1"
+					,"PRJ2:FA:M2"
+					,"PRJ2:FA:M3"
+					,"-PRJ2:FA:M3"
+					
+				);
+				IOdiFullMappingPath mp1=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M1");
+				IOdiFullMappingPath mp2=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M2");
+				IOdiFullMappingPath mp3=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M3");
+		then:	"we will have an answer"
+				rsp!=null;
+				rsp.getProjectPaths()!=null;
+		then:	"included Mappings will contain only M1 and M2, brcause M3 is explicitly excluded"
+				rsp.getIncludeMappings().containsAll(mp1,mp1);
+				rsp.getIncludeMappings().size()==2;
+		then:	"excluded Mappings will have the declared exclusion"
+				rsp.getExcludeMappings().size()==1;
+	}
+	
+	def "Extract Mapping Paths- One explicit Folder exclusion and an implicit Mappings inclusion"(){
+		given:	"several projects and their folders"
+		
+				OdiFolder fX=BITA_MOCK_ODI_FOLDER(NAME:"FX");
+				OdiFolder fY=BITA_MOCK_ODI_FOLDER(NAME:"FY");
+				OdiFolder fA=BITA_MOCK_ODI_FOLDER(NAME:"FA");
+				OdiFolder fB=BITA_MOCK_ODI_FOLDER(NAME:"FB");
+		
+		
+				mOdiFolderFinder.findByProject("PRJ1") >>[];
+				mOdiFolderFinder.findByProject("PRJ2") >>[fX,fY];//2 times the same folder
+				mOdiFolderFinder.findByProject("PRJ3") >>[fA,fB];
+				
+		when:	"multile paths specified"
+				MappingPaths rsp=subject.extractMappingPaths(
+					"PRJ2:FA:M1"
+					,"PRJ2:FA:M2"
+					,"PRJ2:FA:M3"
+					,"-PRJ2:FA"
+					
+				);
+				IOdiFullMappingPath mp1=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M1");
+				IOdiFullMappingPath mp2=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M2");
+				IOdiFullMappingPath mp3=mOdiEntityFactory.newOdiMappingFullPath("PRJ2","FA","M3");
+		then:	"we will have an answer"
+				rsp!=null;
+				rsp.getProjectPaths()!=null;
+		then:	"included Mappings will contain only M1 and M2, brcause M3 is explicitly excluded"
+				rsp.getIncludeMappings().size()==0;
+		then:	"excluded Mappings will have the declared exclusion, in this case 0"
+				rsp.getExcludeMappings().size()==0;
+	}
+	
 
 }

@@ -1,27 +1,28 @@
 package ro.bcr.bita.app
 
-import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService;
-import ro.bcr.bita.mapping.analyze.IMappingAnalyzerService;
+import ro.bcr.bita.core.IBitaGlobals
+import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService
+import ro.bcr.bita.mapping.analyze.IMappingAnalyzerService
 import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor
-import ro.bcr.bita.mapping.dependency.jc.JcParameters;
-import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator;
-import ro.bcr.bita.mapping.dependency.jc.JcStreamSqlExecutor;
-import ro.bcr.bita.model.BitaModelFactory;
-import ro.bcr.bita.model.IBitaModelFactory;
-import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware;
-import ro.bcr.bita.model.IMessageCollection;
-import ro.bcr.bita.model.MappingDependencyRepository;
-import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
-import ro.bcr.bita.odi.proxy.OdiEntityFactory;
-import ro.bcr.bita.odi.proxy.SqlUtil;
+import ro.bcr.bita.mapping.dependency.jc.JcParameters
+import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator
+import ro.bcr.bita.mapping.dependency.jc.JcStreamSqlExecutor
+import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaModelFactory
+import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware
+import ro.bcr.bita.model.IMessageCollection
+import ro.bcr.bita.model.MappingDependencyRepository
+import ro.bcr.bita.odi.proxy.IOdiEntityFactory
+import ro.bcr.bita.odi.proxy.OdiEntityFactory
+import ro.bcr.bita.odi.proxy.SqlUtil
 import ro.bcr.bita.sql.BitaBatchSql
-import ro.bcr.bita.sql.BitaSqlSimpleOperations;
-import ro.bcr.bita.sql.IBitaBatchSql;
-import ro.bcr.bita.sql.IBitaSqlSimpleOperations;
+import ro.bcr.bita.sql.BitaSqlSimpleOperations
+import ro.bcr.bita.sql.IBitaBatchSql
+import ro.bcr.bita.sql.IBitaSqlSimpleOperations
 
-import oracle.odi.core.OdiInstance;
+import oracle.odi.core.OdiInstance
 
-class BitaAppFactory {
+class BitaAppFactory implements IBitaGlobals{
 	
 	private final IBitaModelFactory bitaModelFactory=BitaModelFactory.newInstance();
 	private final IOdiEntityFactory odiEntityFactory;
@@ -34,18 +35,14 @@ class BitaAppFactory {
 		return new BitaAppFactory(odiInstance);
 	}
 	
-	
+
 	private groovy.sql.Sql fetchDbConnection(String oracleServerName){
 		return (new SqlUtil(this.odiEntityFactory)).newSqlInstanceFromServer(oracleServerName,"O_LDS_META","O_LDS_META");
 	}
 	
-	
-	
-	public JcParameters newJcParameters(String dwhRelease,String dwhVersion,String jobGroupName) {
-		return JcParameters.newParameters(jobGroupName,dwhRelease,dwhVersion);
+	public JcParameters newJcParameters(String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
+		return JcParameters.newParameters(jobGroupName,dwhRelease,dwhVersion,scenarioVersion);
 	}
-	
-	
 	
 	public IMappingDependencyRepositoryCyclicAware createMappingDependencyRepository() {
 		return new MappingDependencyRepository();
@@ -56,11 +53,11 @@ class BitaAppFactory {
 	 *Full Functional Medium level components
 	 *
 	 ********************************************************************************************/
-		
-	public JcStreamSqlExecutor newJcStreamSqlExecutor(String oracleServerName,int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName) {
+	
+	public JcStreamSqlExecutor newJcStreamSqlExecutor(String oracleServerName,int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
 		return new JcStreamSqlExecutor(createMappingDependencyRepository()
 				,newSqlExecutor(oracleServerName)
-				,newJcParameters(dwhRelease,dwhVersion,jobGroupName)
+				,newJcParameters(dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
 				,frequencyOfCommits
 				);
 	}
@@ -92,9 +89,9 @@ class BitaAppFactory {
 	 *
 	 ********************************************************************************************/
 	
-	public IJcMetadataCreator newJcMetadataBatchCreator(String oracleServerName,String dwhRelease,String dwhVersion,String jobGroupName) {
+	public IJcMetadataCreator newJcMetadataBatchCreator(String oracleServerName,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
 		return new JcMetadataBatchCreator(
-			newJcParameters(dwhRelease,dwhVersion,jobGroupName)
+			newJcParameters(dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
 			,newJcSqlGenerator()
 			,newMappingAnalyzerService()
 			,newBatchSqlExecutor(oracleServerName)
@@ -104,9 +101,9 @@ class BitaAppFactory {
 			);
 	}
 
-	public IJcMetadataCreator newJcMetadataStreamCreator(String oracleServerName, int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName) {
+	public IJcMetadataCreator newJcMetadataStreamCreator(String oracleServerName, int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
 		return new JcMetadataStreamCreator(
-			newJcStreamSqlExecutor(oracleServerName,frequencyOfCommits,dwhRelease,dwhVersion,jobGroupName)
+			newJcStreamSqlExecutor(oracleServerName,frequencyOfCommits,dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
 			,newMappingAnalyzerService()
 			);
 		

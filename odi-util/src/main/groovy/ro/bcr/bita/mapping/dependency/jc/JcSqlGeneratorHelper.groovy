@@ -6,7 +6,7 @@ import groovy.transform.TypeChecked
 import groovy.transform.TypeCheckingMode
 
 @CompileStatic
-class JcSqlGeneratorHelper{
+class JcSqlGeneratorHelper {
 	
 	static final String SQL_DEPENDENCY_KEY="JC_DEPENDECY";
 	static final String SQL_GROUP_KEY="JC_GROUP";
@@ -30,7 +30,14 @@ class JcSqlGeneratorHelper{
 	private Template tmplSqlGroupDefinitionInit=null;
 	private Template tmplSqlGroupJobInit=null;
 	private Template tmplSqlGroup=null;
-	
+	/********************************************************************************************
+	 *
+	 *Constructors
+	 *
+	 ********************************************************************************************/
+	protected JcSqlGeneratorHelper() {
+		super();
+	}
 	
 	/********************************************************************************************
 	 *
@@ -100,6 +107,14 @@ class JcSqlGeneratorHelper{
 		return this.tmplSqlGroup;
 	}
 	
+	private String generateJobId(JcParameters params,String mappingName) {
+		if (params.isScenarioVersionDefault()) {
+			return mappingName;
+		} else {
+			return mappingName+"_"+params.scenarioVersion;
+		}
+	}
+	
 	/********************************************************************************************
 	 *
 	 *Query generation
@@ -107,8 +122,9 @@ class JcSqlGeneratorHelper{
 	 ********************************************************************************************/
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlDepCleanup(JcParameters params,String mappingName) {
+		String jobId=this.generateJobId(params,mappingName);
 		return this.getTemplateForSqlDependencyInit().make([
-				mappingName:mappingName
+				jobId:jobId
 				,dwhVersion:params.dwhVersion
 				,dwhRelease:params.dwhRelease
 				]).toString()
@@ -116,8 +132,13 @@ class JcSqlGeneratorHelper{
 	
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlDependency(JcParameters params,String whoMappingName,String onMappingName) {
+		
+		String whoJobId=this.generateJobId(params,whoMappingName);
+		String onJobId=this.generateJobId(params,onMappingName);
+		
 			return this.getTemplateForSqlDependency().make([
-				whoMappingName:whoMappingName
+				whoJobId:whoMappingName
+				,onJobId:onJobId
 				,onMappingName:onMappingName
 				,dwhVersion:params.dwhVersion
 				,dwhRelease:params.dwhRelease
@@ -143,33 +164,41 @@ class JcSqlGeneratorHelper{
 	
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlGroupJobs(JcParameters params,String mappingName) {
+		String jobId=this.generateJobId(params,mappingName);
 		return this.getTemplateForSqlGroup().make([
 				jobGroupName:params.jobGroupName
+				,jobId:jobId
 				,dwhVersion:params.dwhVersion
 				,dwhRelease:params.dwhRelease
-				,mappingName:mappingName
 				]).toString();
 	}
 	
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlJobParameters(JcParameters params,String mappingName,String leadingSource) {
 		
+		String jobId=this.generateJobId(params,mappingName);
+		
 		return this.getTemplateForSqlParameters().make([
 				jobGroupName:params.jobGroupName
 				,dwhVersion:params.dwhVersion
 				,dwhRelease:params.dwhRelease
-				,mappingName:mappingName
+				,jobId:jobId
 				,leadingSource:leadingSource
 				]).toString();
 	}
 	
 	@TypeChecked(TypeCheckingMode.SKIP)
 	public String generateSqlJobDefinition(JcParameters params,String mappingName) {
+		
+		String jobId=this.generateJobId(params,mappingName);
+		
 		return this.getTemplateForSqlJobDefinition().make([
 				jobGroupName:params.jobGroupName
 				,dwhVersion:params.dwhVersion
 				,dwhRelease:params.dwhRelease
 				,mappingName:mappingName
+				,jobId:jobId
+				,mappingScenarioVersion:params.scenarioVersion
 				]).toString();
 	}
 

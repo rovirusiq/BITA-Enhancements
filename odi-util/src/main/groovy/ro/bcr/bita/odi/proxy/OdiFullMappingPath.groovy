@@ -81,6 +81,14 @@ class OdiFullMappingPath implements IOdiFullMappingPath {
 			return false;
 		return true;
 	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "OdiFullMappingPath [${this.projectCode}-${this.folderName}-${this.mappingName}]";
+	}
 	
 	
 

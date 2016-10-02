@@ -3,6 +3,7 @@ package ro.bcr.bita.odi.proxy;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.IOdiScenario;
 
+import java.util.HashMap;
 import java.util.List;
 
 import oracle.odi.domain.mapping.finder.IMappingFinder;
@@ -24,5 +25,6 @@ public interface IOdiOperationsService {
 	public IOdiScenario findScenarioForMapping(IOdiMapping map,String version) throws BitaOdiException;
 	public IOdiScenario findBitaScenarioForMapping(IOdiMapping map) throws BitaOdiException;
 	public IOdiScenario findTestScenarioForMapping(IOdiMapping map) throws BitaOdiException;
+	
 
 }

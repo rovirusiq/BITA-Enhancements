@@ -9,7 +9,10 @@ import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory
 import ro.bcr.bita.odi.proxy.IOdiProjectPaths
 import ro.bcr.bita.odi.proxy.OdiPathUtil
+import ro.bcr.bita.odi.proxy.OdiPathUtil.MappingPaths;
 import ro.bcr.bita.odi.template.IOdiMappingVersions;
+
+import java.util.HashMap;
 
 import oracle.odi.core.persistence.transaction.ITransactionStatus;
 import oracle.odi.domain.IOdiEntity;
@@ -19,6 +22,9 @@ import oracle.odi.domain.project.finder.IOdiProjectFinder
 import oracle.odi.domain.runtime.scenario.OdiScenario
 import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFinder
 import oracle.odi.domain.runtime.scenario.finder.IOdiScenarioFolderFinder
+import oracle.odi.runtime.agent.invocation.ExecutionInfo;
+import oracle.odi.runtime.agent.invocation.RemoteRuntimeAgentInvoker
+import oracle.odi.runtime.agent.invocation.StartupParams;
 
 class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 	
@@ -71,31 +77,23 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 		
 		try {
 		
-			IOdiProjectPaths rsp=this.odiPathUtils.extractProjectPaths(odiPaths);
+			MappingPaths rsp=this.odiPathUtils.extractMappingPaths(odiPaths);
 			
 			List<IOdiMapping> mps=[];
 			
-			Set<IOdiFullMappingPath> includedMappings=[];
-			Set<IOdiFullMappingPath> excludedMappings=[];
-			
-			this.odiPathUtils.populateFullOdiMappingPaths(includedMappings,excludedMappings,odiPaths);
+			Set<IOdiFullMappingPath> includedMappings=rsp.getIncludeMappings();
+			Set<IOdiFullMappingPath> excludedMappings=rsp.getExcludeMappings();
 			
 			IMappingFinder finder=this.odiEntityFactory.createMappingFinder();
 			
-			for (String prj:rsp.getProjects()) {
+			for (String prj:rsp.getProjectPaths().getProjects()) {
 				
-				for (String folder:rsp.getFoldersForProject(prj)) {
+				for (String folder:rsp.getProjectPaths().getFoldersForProject(prj)) {
 				
-					mps << (finder.findByProject(prj,folder).collect{
-								IOdiFullMappingPath p=this.odiEntityFactory.newOdiMappingFullPath(prj,folder,it.getName());
-								
-								if (includedMappings.contains(p)) {
-									includedMappings=includedMappings-p;
-								}
-								
+					mps << (finder.findByProject(prj,folder).collect{it->
+								IOdiFullMappingPath p=this.odiEntityFactory.newOdiMappingFullPath(prj,folder,it.getName());						
 								if (!excludedMappings.contains(p)) {
 									return bitaModelFactory.newOdiMapping(it);
-									
 								} else {
 									return [];
 								}
@@ -109,8 +107,7 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 					mps << bitaModelFactory.newOdiMapping(c.getAt(0));
 				} else if (c.size()>1) throw new BitaOdiException("Multiple mappinggs with the same name in the same project and the same fodler [${mp.getProjectCode()}:${mp.getMappingName()}:${mp.getFolderName()}]");
 			}
-			
-			
+	
 			return mps.flatten();
 		} catch (Exception ex) {
 			throw new BitaOdiException("An exception occured when trying to identify mappings from the pats[$odiPaths].",ex);
@@ -134,6 +131,5 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 	public IOdiScenario findTestScenarioForMapping(IOdiMapping map) throws BitaOdiException {
 		return this.findScenarioForMapping(map,MAPPING_VERSION_NUMBER_FOR_TESTING);
 	}
-
 
 }

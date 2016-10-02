@@ -1,0 +1,2 @@
+For svn to ignore files use the following command in the context of this folder (current directory=this folder)
+svn propset svn:ignore -F .gitignore.txt . 

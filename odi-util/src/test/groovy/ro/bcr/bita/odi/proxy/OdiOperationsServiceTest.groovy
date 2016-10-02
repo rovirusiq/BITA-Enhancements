@@ -5,8 +5,13 @@ import ro.bcr.bita.model.BitaSpockSpecification
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IOdiMapping;
 
+import java.util.HashMap;
+
 import oracle.odi.domain.mapping.Mapping;
 import oracle.odi.domain.project.OdiFolder;
+import oracle.odi.runtime.agent.invocation.ExecutionInfo;
+import oracle.odi.runtime.agent.invocation.RemoteRuntimeAgentInvoker;
+import oracle.odi.runtime.agent.invocation.StartupParams;
 
 class OdiOperationsServiceTest extends BitaSpockSpecification {
 	
@@ -102,8 +107,56 @@ class OdiOperationsServiceTest extends BitaSpockSpecification {
 		
 	}
 	
+	def "Find Mappings - full path included Mapping has path already included"(){
+		given:	"several projects with folders, but no mappings"
+				
+				Mapping m1=BITA_MOCK_ODI_MAPPING("M1");
+				Mapping m2=BITA_MOCK_ODI_MAPPING("M2");
+				Mapping m3=BITA_MOCK_ODI_MAPPING("M3");
+				Mapping m4=BITA_MOCK_ODI_MAPPING("M4");
+				Mapping m5=BITA_MOCK_ODI_MAPPING("M5");
+				Mapping m6=BITA_MOCK_ODI_MAPPING("M6");
+				Mapping m8=BITA_MOCK_ODI_MAPPING("M7");
+				Mapping m9=BITA_MOCK_ODI_MAPPING("M9");
+				Mapping m10=BITA_MOCK_ODI_MAPPING("M10");
+				Mapping m11=BITA_MOCK_ODI_MAPPING("M11");
+		
+				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_1") >> [m1,m2];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_1") >> [m8];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_2") >> [m4,m5,m3,m9];
+				stbOdiMappingFinder.findByName("M10","PRJ_B","FOLDER_2") >> [m10];
+		when:	"find mappings is called with the project paths from above"
+				List<IOdiMapping> rsp=subject.findMappings("+PRJ_A:FOLDER_1","PRJ_B:FOLDER_2","-PRJ_B:FOLDER_2:M5","+PRJ_B:FOLDER_2:M_10");
+		then:	"a list with maps is returned. M5 is exclued, M10 is not added because the entire folder was already included"
+				rsp!=null;
+				rsp.size()==5;
+	}
 	
 	
+	def "Find Mappings - full path included Mapping has path already exluded"(){
+		given:	"several projects with folders, but no mappings"
+				
+				Mapping m1=BITA_MOCK_ODI_MAPPING("M1");
+				Mapping m2=BITA_MOCK_ODI_MAPPING("M2");
+				Mapping m3=BITA_MOCK_ODI_MAPPING("M3");
+				Mapping m4=BITA_MOCK_ODI_MAPPING("M4");
+				Mapping m5=BITA_MOCK_ODI_MAPPING("M5");
+				Mapping m6=BITA_MOCK_ODI_MAPPING("M6");
+				Mapping m8=BITA_MOCK_ODI_MAPPING("M7");
+				Mapping m9=BITA_MOCK_ODI_MAPPING("M9");
+				Mapping m10=BITA_MOCK_ODI_MAPPING("M10");
+				Mapping m11=BITA_MOCK_ODI_MAPPING("M11");
+		
+				stbOdiMappingFinder.findByProject("PRJ_A","FOLDER_1") >> [m1,m2];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_1") >> [m8];
+				stbOdiMappingFinder.findByProject("PRJ_B","FOLDER_2") >> [m4,m5,m3,m9];
+				stbOdiMappingFinder.findByName("M10","PRJ_B","FOLDER_2") >> [m10];
+		when:	"find mappings is called with the project paths from above"
+				List<IOdiMapping> rsp=subject.findMappings("+PRJ_A:FOLDER_1","-PRJ_B:FOLDER_2","+PRJ_B:FOLDER_2:M10");
+		then:	"a list with maps is returned. M4,M5,M3,M9,M10 are excluded because PRJ2:FOLDER_2 is excluded"
+				rsp!=null;
+				rsp.size()==2;
+	}
 	
 	
 	def "Find Mappings - different include and exclude paths"(){

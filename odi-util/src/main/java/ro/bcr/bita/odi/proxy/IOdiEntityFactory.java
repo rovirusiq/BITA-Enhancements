@@ -1,8 +1,5 @@
 package ro.bcr.bita.odi.proxy;
 
-import ro.bcr.bita.odi.template.IOdiCommandContext;
-import ro.bcr.bita.odi.template.OdiBasicTemplate;
-
 import java.util.Map;
 import java.util.Set;
 
@@ -44,15 +41,17 @@ public interface IOdiEntityFactory {
 	 ************************************************************************************************************/
 	public abstract ITransactionStatus createTransaction() throws BitaOdiException;
 	/************************************************************************************************************
-	 *Bita ODI related
+	 *Custom ODI related
 	 ************************************************************************************************************/
 	public abstract OdiPathUtil newOdiPathUtil();
 
 	public abstract OdiProjectPaths newOdiProjectPaths(Map<String,Set<String>> includePaths);
 	
-	public abstract IOdiCommandContext newOdiTemplateCommandContext();
-	
-	public abstract OdiBasicTemplate newOdiTemplate();
-	
 	public abstract IOdiFullMappingPath newOdiMappingFullPath(String projectCode,String folderName,String mappingName);
+	
+	public abstract IOdiBasicPersistenceService newOdiBasicPersistenceService();
+	/************************************************************************************************************
+	 *Cleanup methods
+	 ************************************************************************************************************/
+	public abstract void cleanup();
 }

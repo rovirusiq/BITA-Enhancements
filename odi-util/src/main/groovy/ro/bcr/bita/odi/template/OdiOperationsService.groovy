@@ -1,12 +1,15 @@
-package ro.bcr.bita.odi.proxy
+package ro.bcr.bita.odi.template
 
 import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory
 import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.IOdiScenario
 import ro.bcr.bita.odi.proxy.BitaOdiException;
 import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory
+import ro.bcr.bita.odi.proxy.IOdiFullMappingPath;
+import ro.bcr.bita.odi.proxy.IOdiOperationsService;
 import ro.bcr.bita.odi.proxy.IOdiProjectPaths
 import ro.bcr.bita.odi.proxy.OdiPathUtil
 import ro.bcr.bita.odi.proxy.OdiPathUtil.MappingPaths;
@@ -28,14 +31,12 @@ import oracle.odi.runtime.agent.invocation.StartupParams;
 
 class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 	
-	private final IOdiEntityFactory odiEntityFactory;
 	private final OdiPathUtil odiPathUtils;
-	private IBitaModelFactory bitaModelFactory;
+	private IBitaDomainFactory bitaFactory;
 	
-	public OdiOperationsService(IBitaModelFactory bitaModelFactory,IOdiEntityFactory odiEntityFactory) {
-		this.odiEntityFactory=odiEntityFactory;
-		this.bitaModelFactory=bitaModelFactory;
-		this.odiPathUtils=this.odiEntityFactory.newOdiPathUtil();
+	public OdiOperationsService(IBitaDomainFactory bitaDFactory) {
+		this.bitaFactory=bitaDFactory;
+		this.odiPathUtils=this.bitaFactory.newOdiPathUtil();
 	}
 	
 	/********************************************************************************************
@@ -45,27 +46,27 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 	 ********************************************************************************************/
 	@Override
 	public IMappingFinder getMappingFinder() {
-		return this.odiEntityFactory.createMappingFinder()
+		return this.bitaFactory.createMappingFinder()
 	}
 
 	@Override
 	public IOdiProjectFinder getProjectFinder() {
-		return this.odiEntityFactory.createProjectFinder();
+		return this.bitaFactory.createProjectFinder();
 	}
 
 	@Override
 	public IOdiScenarioFinder getScenarioFinder() {
-		return this.odiEntityFactory.createScenarioFinder();
+		return this.bitaFactory.createScenarioFinder();
 	}
 	
 	@Override
 	public IOdiScenarioFolderFinder getScenarioFolderFinder() {
-		return this.odiEntityFactory.createScenarioFolderFinder();
+		return this.bitaFactory.createScenarioFolderFinder();
 	}
 	
 	@Override
 	public IOdiFolderFinder getProjectFolderFinder() {
-		return this.odiEntityFactory.createProjectFolderFinder();
+		return this.bitaFactory.createProjectFolderFinder();
 	}
 
 	
@@ -84,16 +85,16 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 			Set<IOdiFullMappingPath> includedMappings=rsp.getIncludeMappings();
 			Set<IOdiFullMappingPath> excludedMappings=rsp.getExcludeMappings();
 			
-			IMappingFinder finder=this.odiEntityFactory.createMappingFinder();
+			IMappingFinder finder=this.bitaFactory.createMappingFinder();
 			
 			for (String prj:rsp.getProjectPaths().getProjects()) {
 				
 				for (String folder:rsp.getProjectPaths().getFoldersForProject(prj)) {
 				
 					mps << (finder.findByProject(prj,folder).collect{it->
-								IOdiFullMappingPath p=this.odiEntityFactory.newOdiMappingFullPath(prj,folder,it.getName());						
+								IOdiFullMappingPath p=this.bitaFactory.newOdiMappingFullPath(prj,folder,it.getName());						
 								if (!excludedMappings.contains(p)) {
-									return bitaModelFactory.newOdiMapping(it);
+									return bitaFactory.newOdiMapping(it);
 								} else {
 									return [];
 								}
@@ -104,7 +105,7 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 			for (IOdiFullMappingPath mp:includedMappings) {
 				Collection c=finder.findByName(mp.getMappingName(),mp.getProjectCode(),mp.getFolderName());
 				if (c.size()==1) {
-					mps << bitaModelFactory.newOdiMapping(c.getAt(0));
+					mps << bitaFactory.newOdiMapping(c.getAt(0));
 				} else if (c.size()>1) throw new BitaOdiException("Multiple mappinggs with the same name in the same project and the same fodler [${mp.getProjectCode()}:${mp.getMappingName()}:${mp.getFolderName()}]");
 			}
 	
@@ -119,7 +120,7 @@ class OdiOperationsService implements IOdiOperationsService,IOdiMappingVersions{
 	public IOdiScenario findScenarioForMapping(IOdiMapping map, String pVersion) throws BitaOdiException {
 		 OdiScenario scenOfInterest=this.getScenarioFinder().findBySourceMapping(map.getInternalId())?.find{elem->elem.getVersion()=="$pVersion"};
 		 if (scenOfInterest==null) throw new BitaOdiException("No scenario with version $pVersion was identified for mapping[${map}]");
-		 return scenOfInterest;
+		 return this.bitaFactory.newOdiScenario(scenOfInterest);
 	}
 
 	@Override

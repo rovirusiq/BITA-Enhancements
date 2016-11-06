@@ -1,0 +1,45 @@
+MERGE INTO O_LDS_META.CMT_JC_PARAMETER e
+using (
+select
+'$jobId' as job_id
+,'$dwhVersion' as dwh_version_cd
+,'$dwhRelease' as release_cd
+,'$jobGroupName' as jobgroup_id
+,'GLOBAL.GVGRAN_COB_DT' as parameter_name
+,'@cob_dt@' as parameter_value
+,null from dual
+<%if (scenarioParams){%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SOURCE_SYSTEM_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SOURCE_SYSTEM_CD','SOURCE',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_DEBUG_MODE_IND')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_DEBUG_MODE_IND','Y',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_AUDIT_EXECUTION_ID')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_AUDIT_EXECUTION_ID','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_ENTITY_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_ENTITY_CD','BCR',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_FILE_NAME')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_FILE_NAME','@auto_file_name@',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_APPLICATION_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_APPLICATION_CD','APP',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_CORRECTION_ROW_IND')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_CORRECTION_ROW_IND','Y',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_EXTRACT_TS')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_EXTRACT_TS','10:00:00',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_PERIOD_ID')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_PERIOD_ID','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SCENARIO_ID')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SCENARIO_ID','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SOURCE_DT')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SOURCE_DT','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SRCSTREAM_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SRCSTREAM_CD','$leadingSource',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_TECHNICAL_DT')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TECHNICAL_DT','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_VERSION_NUMBER')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_VERSION_NUMBER','',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_LOAD_BATCH_ID')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_LOAD_BATCH_ID','@batch_id@',null from dual
+<%}%><%}%>) n
+on (e.job_id=n.job_id and e.dwh_version_cd=n.dwh_version_cd and e.release_cd=n.release_cd and e.jobgroup_id=n.jobgroup_id)
+when not matched then
+	insert (job_id,dwh_version_cd,release_cd,jobgroup_id,parameter_name,parameter_value)  
+		values (n.job_id,n.dwh_version_cd,n.release_cd,n.jobgroup_id,n.parameter_name,n.parameter_value)

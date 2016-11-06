@@ -71,7 +71,7 @@ public class OdiController {
 			HashMap<String,String> scenParams=[:];
 			
 			pN.eachWithIndex  {String e,Integer idx->
-				if (!"".equals(pN)) {
+				if ( (e!=null) && (!"".equals(e.trim())) )  {
 					scenParams.put(e,pV[idx]);
 				}
 			}
@@ -84,7 +84,10 @@ public class OdiController {
 			
 			return rsp;
 		} catch (Exception ex) {
-			throw new BitaRestException("Rest Call for scenario execution[$scenName;$scenVersion] ended with exception.", ex);
+			//temporary until I figure out how to better log.
+			logger.error("###Exception occured: ",ex);
+			throw new BitaRestException("Rest Call for scenario execution[$scenName;$scenVersion] ended with exception: "+ex.toString()+". Please see full stack for details", ex);
+			
 		}
 	}
 			

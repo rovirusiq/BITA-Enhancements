@@ -11,5 +11,7 @@ public interface IOdiMapping {
 	public String identifyTarget() throws BitaModelException;
 	public String getLeadingSource() throws BitaModelException;
 	public String getFullPathName() throws BitaModelException;
+	public boolean isDataAcquisitionMapping() throws BitaModelException;
+	public List<String> getParameterListOfScenario(String version);
 
 }

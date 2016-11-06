@@ -17,7 +17,7 @@ class OdiPathUtil {
 	
 	
 	
-	private static class MappingPaths{
+	public static class MappingPaths{
 		private final IOdiProjectPaths projectPaths;
 		private final Set<IOdiFullMappingPath> includeMappings;
 		private final Set<IOdiFullMappingPath> excludeMappings;

@@ -30,5 +30,4 @@ class JcMetadataStreamCreator implements IJcMetadataCreator {
 		srv.analyzeMappingsFrom(odiPaths);
 		sqlExecutor.generateAndExecuteSqlAfterAnalysis();
 	}
-
 }

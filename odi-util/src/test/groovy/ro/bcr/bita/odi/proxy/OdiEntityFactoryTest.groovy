@@ -39,14 +39,12 @@ class OdiEntityFactoryTest extends Specification{
 	def OdiEntityFactory subject;
 	def IOdiEntityManager mEntManager;
 	def ITransactionManager mTrnManager;
-	def IBitaModelFactory bitaModelFactory;
 	
 	def setup() {
 		mOdiInstance=Mock();
 		mEntManager=Mock();
 		mTrnManager=Mock();
-		this.bitaModelFactory=BitaModelFactoryForTesting.newInstance();
-		subject=OdiEntityFactory.createInstance(mOdiInstance,this.bitaModelFactory);
+		subject=OdiEntityFactory.createInstance(mOdiInstance);
 	}
 	
 	def "Test interaction with supplied odiInstance when getting access to it"(){
@@ -60,7 +58,7 @@ class OdiEntityFactoryTest extends Specification{
 	def "when the OdiInstance costructor argument is null, then an exception is thrown"(){
 		given:	"""The objects in the setup method"""
 		when:	"The OdiEntityFactory is instantiaded with null for OdiInstance parameter"
-				subject=OdiEntityFactory.createInstance(null,this.bitaModelFactory);
+				subject=OdiEntityFactory.createInstance(null);
 		then:	"An exception is thrown"
 				thrown BitaOdiException;
 	}
@@ -68,24 +66,7 @@ class OdiEntityFactoryTest extends Specification{
 	def "when the OdiInstance costructor argument is null to the method createInstanceFromProperties, then an exception is thrown"(){
 		given:	"""The objects in the setup method"""
 		when:	"The OdiEntityFactory is instantiaded with null for OdiInstance parameter"
-				subject=OdiEntityFactory.createInstanceFromProperties(null,this.bitaModelFactory);
-		then:	"An exception is thrown"
-				thrown BitaOdiException;
-	}
-	
-	def "when the BitaModelFactory costructor argument is null, then an exception is thrown"(){
-		given:	"""The objects in the setup method"""
-		when:	"The OdiEntityFactory is instantiaded with null for OdiInstance parameter"
-				subject=OdiEntityFactory.createInstance(mOdiInstance,null);
-		then:	"An exception is thrown"
-				thrown BitaOdiException;
-	}
-	
-	def "when the BitaModelFactory costructor argument is null to the method createInstanceFromProperties, then an exception is thrown"(){
-		given:	"""The objects in the setup method"""
-		when:	"The OdiEntityFactory is instantiaded with null for OdiInstance parameter"
-				def OdiInstanceProperties prop=new OdiEntityFactory.OdiInstanceProperties();
-				subject=OdiEntityFactory.createInstanceFromProperties(prop,null);
+				subject=OdiEntityFactory.createInstanceFromProperties(null);
 		then:	"An exception is thrown"
 				thrown BitaOdiException;
 	}
@@ -95,7 +76,7 @@ class OdiEntityFactoryTest extends Specification{
 		when:	"The OdiEntityFactory is instantiaded with null for OdiInstance parameter"
 				def OdiInstanceProperties prop=new OdiEntityFactory.OdiInstanceProperties();
 				prop.setMasterRepositoryUsername("cutu");
-				subject=OdiEntityFactory.createInstanceFromProperties(prop,this.bitaModelFactory);
+				subject=OdiEntityFactory.createInstanceFromProperties(prop);
 		then:	"An exception is thrown"
 				thrown BitaOdiException;
 	}
@@ -377,14 +358,6 @@ class OdiEntityFactoryTest extends Specification{
 				rsp instanceof OdiProjectPaths;
 	}
 	
-	def "Test method newOdiTemplateCommandContext for success"(){
-		given:	"""The objects in the setup method and the mocked from below"""
-		when:	"The method under the test is called"
-				IOdiCommandContext rsp=subject.newOdiTemplateCommandContext();
-		then:	"The rsp is of correct type"
-				rsp instanceof IOdiCommandContext;
-				rsp.inTransaction()==false;
-				rsp.getTransactionStatus()==null;
-	}
+	
 
 }

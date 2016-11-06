@@ -19,7 +19,7 @@ class JcStreamSqlExecutor implements IMappingAnalyzeProcessor{
 	private final IMappingDependencyRepositoryCyclicAware repo;
 	private final IBitaSqlSimpleOperations sqlExecutor;
 	private final JcParameters params;
-	private final JcSqlGeneratorHelper sqlGenerator=new JcSqlGeneratorHelper();
+	private final JcSqlCommandsHelper sqlGenerator=new JcSqlCommandsHelper();
 	private int commitCounter=0;
 	private final int maxCommitCounter;
 	private Boolean statusSqlBefore=false;
@@ -44,11 +44,16 @@ class JcStreamSqlExecutor implements IMappingAnalyzeProcessor{
 	}
 	
 	private void generateAndExecuteSqlForOneMapping(IOdiMapping mapping) {
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlDepCleanup(params,mapping.getName()));
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlJobDefinition(params,mapping.getName()));
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlJobParameters(params,mapping.getName(),mapping.getLeadingSource()));
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlGroupJobs(params,mapping.getName()));
-		this.checkCounterAndCommit(4);
+		
+		String jobId=this.params.generateJobId(mapping.getName());
+		
+		List<String> sqlJobDefinition=sqlGenerator.generateSqlJobDefinition(params,jobId,mapping.getName(),mapping.getLeadingSource(),mapping.getParameterListOfScenario(params.getScenarioVersion()));
+		List<String> sqlAddToGroup=sqlGenerator.generateSqlGroupJobs(params,jobId);		
+		
+		this.sqlExecutor.executeInCurrentTransaction(sqlJobDefinition as String[]);
+		this.sqlExecutor.executeInCurrentTransaction(sqlAddToGroup as String[]);
+		
+		this.checkCounterAndCommit(sqlJobDefinition.size()+sqlAddToGroup.size());
 	}
 	/********************************************************************************************
 	 *
@@ -72,8 +77,9 @@ class JcStreamSqlExecutor implements IMappingAnalyzeProcessor{
 	
 	
 	public generateAndExecuteSqlBeforeAnalysis() {
-		this.sqlExecutor.executeInCurrentTransaction(sqlGenerator.generateSqlGroupDefinition(params));
-		this.checkCounterAndCommit(1);
+		String[] queries=sqlGenerator.generateSqlGroupDefinition(params);
+		this.sqlExecutor.executeInCurrentTransaction(queries);
+		this.checkCounterAndCommit(queries.length);
 		this.statusSqlBefore=true;
 	}
 	
@@ -82,8 +88,13 @@ class JcStreamSqlExecutor implements IMappingAnalyzeProcessor{
 		
 		 for (IDependency dep:dpds) {
 			MappingDependency mp=(MappingDependency) dep;
-			this.sqlExecutor.executeInCurrentTransaction(this.sqlGenerator.generateSqlDependency(params,mp.who(),mp.on()));
-			this.checkCounterAndCommit(1);
+			
+			String whoJobId=this.params.generateJobId(mp.who());
+			String onJobId=this.params.generateJobId(mp.on());
+			
+			List<String> sql=this.sqlGenerator.generateSqlDependency(params,whoJobId,onJobId)
+			this.sqlExecutor.executeInCurrentTransaction(sql as String[]);
+			this.checkCounterAndCommit(sql.size());
 		}
 		 
 		this.sqlExecutor.commit();

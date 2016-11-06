@@ -11,6 +11,7 @@ import oracle.odi.runtime.agent.invocation.StartupParams;
 class OdiRemoteOperationsServiceTest extends BitaTestSpecification {
 	
 	private OdiRemoteOperationsService subject;
+	protected IOdiRemoteEntityFactory stbOdiRemoteEntityFactory=StubObject(IOdiRemoteEntityFactory);
 	
 	def setup() {
 		subject=new OdiRemoteOperationsService(this.stbOdiRemoteEntityFactory);
@@ -38,12 +39,10 @@ class OdiRemoteOperationsServiceTest extends BitaTestSpecification {
 				String statusMsg="Message";
 				
 				OdiScenExecutionEnv env=stbOdiRemoteEntityFactory.newOdiScenExecutionEnv(agentUrl,odiUsername,odiPassword,odiContext,odiLogLevel,odiWorkRepName);
-				
-		
+								
 				RemoteRuntimeAgentInvoker mckAgent=Mock();
 				ExecutionInfo mckInfo=Mock();
 				StartupParams mckParams=Mock();
-				//ExecutionInfo.SessionStatus mckExecStatus=Mock();
 				
 				stbOdiRemoteEntityFactory.newOdiScenParams(scenParams)>>{
 					return mckParams;
@@ -75,7 +74,7 @@ class OdiRemoteOperationsServiceTest extends BitaTestSpecification {
 					return statusMsg;
 				}
 				
-				0 * _;//not othe rinteraction
+				0 * _;//not other rinteraction
 		then:	"The results are as expected"
 				statusCode.equals(rsp.getCode());
 				rsp.getSessionNumber().equals(""+sessionNumber);

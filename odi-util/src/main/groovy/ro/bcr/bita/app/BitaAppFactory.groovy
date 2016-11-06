@@ -3,11 +3,15 @@ package ro.bcr.bita.app
 import ro.bcr.bita.core.IBitaGlobals
 import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService
 import ro.bcr.bita.mapping.analyze.IMappingAnalyzerService
-import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor
+import ro.bcr.bita.mapping.dependency.MappingDependencyAnalyzerProcessor
+import ro.bcr.bita.mapping.dependency.jc.JcJobIdGenerator;
 import ro.bcr.bita.mapping.dependency.jc.JcParameters
+import ro.bcr.bita.mapping.dependency.jc.JcSqlCommandsHelper;
 import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator
 import ro.bcr.bita.mapping.dependency.jc.JcStreamSqlExecutor
+import ro.bcr.bita.model.BitaDomainFactory;
 import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory
 import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware
 import ro.bcr.bita.model.IMessageCollection
@@ -26,9 +30,11 @@ class BitaAppFactory implements IBitaGlobals{
 	
 	private final IBitaModelFactory bitaModelFactory=BitaModelFactory.newInstance();
 	private final IOdiEntityFactory odiEntityFactory;
+	private final IBitaDomainFactory bitaDomainfactory;
 	
 	private BitaAppFactory(OdiInstance odiInstance) {
-		this.odiEntityFactory=OdiEntityFactory.newInstance(odiInstance,bitaModelFactory);
+		this.odiEntityFactory=OdiEntityFactory.newInstance(odiInstance);
+		this.bitaDomainfactory=BitaDomainFactory.newInstance(bitaModelFactory,this.odiEntityFactory);
 	}
 	
 	public static BitaAppFactory newInstance(OdiInstance odiInstance) {
@@ -39,13 +45,22 @@ class BitaAppFactory implements IBitaGlobals{
 	private groovy.sql.Sql fetchDbConnection(String oracleServerName){
 		return (new SqlUtil(this.odiEntityFactory)).newSqlInstanceFromServer(oracleServerName,"O_LDS_META","O_LDS_META");
 	}
+	/********************************************************************************************
+	 *
+	 *Public methods. Usefull for creating second level objects
+	 *
+	 ********************************************************************************************/
 	
 	public JcParameters newJcParameters(String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
-		return JcParameters.newParameters(jobGroupName,dwhRelease,dwhVersion,scenarioVersion);
+		return JcParameters.newParameters(jobGroupName,dwhRelease,dwhVersion,scenarioVersion,new JcJobIdGenerator(),true);
 	}
 	
 	public IMappingDependencyRepositoryCyclicAware createMappingDependencyRepository() {
 		return new MappingDependencyRepository();
+	}
+	
+	public JcSqlCommandsHelper newJcSqlCommandHelper() {
+		return new JcSqlCommandsHelper();
 	}
 	
 	/********************************************************************************************
@@ -63,12 +78,16 @@ class BitaAppFactory implements IBitaGlobals{
 	}
 	
 	public JcSqlGenerator newJcSqlGenerator() {
-		return new JcSqlGenerator(new MappingAnalyzeDependencyProcessor(createMappingDependencyRepository()));
+		return new JcSqlGenerator(new MappingDependencyAnalyzerProcessor(createMappingDependencyRepository()));
 	}
 	
 	public IMappingAnalyzerService newMappingAnalyzerService() {
-		IMappingAnalyzerService rsp=new BitaMappingAnalyzerService(this.odiEntityFactory.newOdiTemplate());
+		IMappingAnalyzerService rsp=new BitaMappingAnalyzerService(this.bitaDomainfactory.newOdiTemplate());
 		return rsp;
+	}
+	
+	public MappingDependencyAnalyzerProcessor newMappingDependencyAnalyzerProcessor() {
+		return new MappingDependencyAnalyzerProcessor(this.createMappingDependencyRepository());
 	}
 	
 	public IBitaSqlSimpleOperations newSqlExecutor(String oracleServerName) {

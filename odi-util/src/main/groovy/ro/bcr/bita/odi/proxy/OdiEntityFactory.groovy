@@ -6,8 +6,10 @@ import ro.bcr.bita.odi.template.OdiBasicTemplate;
 import ro.bcr.bita.odi.template.OdiCommandContext;
 
 import bsh.This;
+import groovy.sql.Sql;
 import groovy.transform.TypeChecked;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -51,7 +53,7 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	 *
 	 ********************************************************************************************/
 	
-	public class OdiInstanceProperties{
+	public static class OdiInstanceProperties{
 		
 		private String workRepositoryName;
 		private String masterRepositoryUsername;
@@ -80,6 +82,11 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		public setMasterRepositoryPassword(String masterRepositoryPassword) {
 			this.masterRepositoryPassword = masterRepositoryPassword;
 		}
+		
+		public setMasterRepositoryPassword(char[] masterRepositoryPassword) {
+			this.masterRepositoryPassword = String.valueOf(masterRepositoryPassword);
+		}
+		
 		/**
 		 * @param odiUsername the odiUsername to set
 		 */
@@ -91,6 +98,10 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		 */
 		public setOdiPassword(String odiPassword) {
 			this.odiPassword = odiPassword;
+		}
+		
+		public setOdiPassword(char[] odiPassword) {
+			this.odiPassword = String.valueOf(odiPassword);
 		}
 		
 		/**
@@ -119,15 +130,11 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	 *Constructor
 	 *
 	 ********************************************************************************************/
-	private OdiEntityFactory(OdiInstance odiInstance,IBitaModelFactory bitaModelFactory) {
+	private OdiEntityFactory(OdiInstance odiInstance) {
 		
-		if (odiInstance==null) throw new BitaOdiException("The parameter odiInstance for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance,bitaModelFactory)] cannot be null.");
-		if (bitaModelFactory==null) throw new BitaOdiException("The parameter bitaModelFactory for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance,bitaModelFactory)] cannot be null.");
-		
+		if (odiInstance==null) throw new BitaOdiException("The parameter odiInstance for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstance,bitaModelFactory)] cannot be null.");		
 		this.odiInstance=odiInstance;
 		this.odiPersistSrv=new OdiBasicPersistenceService(odiInstance);
-		this.bitaModelFactory=bitaModelFactory;
-		this.odiOpSrv=new OdiOperationsService(this.bitaModelFactory,this);
 	}
 	/********************************************************************************************
 	 *
@@ -218,7 +225,7 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		}
 	}
 	/********************************************************************************************
-	 *Odi Utils related
+	 *Custom Odi Utils related
 	 ********************************************************************************************/
 	@Override
 	@TypeChecked
@@ -234,22 +241,27 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	
 	@Override
 	@TypeChecked
-	public  IOdiCommandContext newOdiTemplateCommandContext(){
-		return new OdiCommandContext(this,this.odiOpSrv,this.odiPersistSrv);
-	}
-	
-	@Override
-	@TypeChecked
-	public OdiBasicTemplate newOdiTemplate() {
-		return new OdiBasicTemplate(this);
-	}
-	
-	@Override
-	@TypeChecked
 	public IOdiFullMappingPath newOdiMappingFullPath(String projectCode,String folderName,String mappingName) {
 		return new OdiFullMappingPath(projectCode, folderName, mappingName);
 	}
 	
+	
+	@Override
+	@TypeChecked
+	public IOdiBasicPersistenceService newOdiBasicPersistenceService() {
+		return this.odiPersistSrv;
+	}
+	
+	@Override
+	@TypeChecked
+	public void cleanup() {
+		try {
+			this.odiInstance.close();	
+		} catch (Exception ex) {
+			//silently fail. If it runs in odi log in odilog file
+			org.apache.commons.logging.LogFactory.getLog("oracle.odi").error("Class OdiEntityFactory method cleanup encountered and exception when trying to close the OdiInstance",ex);
+		}
+	}
 	/********************************************************************************************
 	 *
 	 *Own Instance methods
@@ -281,11 +293,11 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		return ((smth!=null) && (!"".equals(smth)));
 	}
 	
-	public static IOdiEntityFactory createInstance(OdiInstance odiInstance,IBitaModelFactory bitaModelFactory) throws BitaOdiException{
-
-		return new OdiEntityFactory(odiInstance,bitaModelFactory);
+	public static IOdiEntityFactory createInstance(OdiInstance odiInstance) throws BitaOdiException{
+		return new OdiEntityFactory(odiInstance);
 	}
-	public static IOdiEntityFactory createInstanceFromProperties(OdiInstanceProperties odiInstanceProperties,IBitaModelFactory bitaModelFactory) throws BitaOdiException{
+	
+	public static OdiInstance createOdiInstanceFromProperties(OdiInstanceProperties odiInstanceProperties) throws BitaOdiException{
 		
 		if (odiInstanceProperties==null) throw new BitaOdiException("The parameter odiInstanceProperties for the factory method of OdiEntityFactory[OdiFactoryEntity.createInstance(odiInstanceProperties)] cannot be null.");
 		
@@ -294,11 +306,10 @@ class OdiEntityFactory implements IOdiEntityFactory{
 		if (!checkParameter(odiInstanceProperties.masterRepositoryUsername)) throwCheckException("masterRepositoryUsername",odiInstanceProperties.masterRepositoryUsername);
 		if (!checkParameter(odiInstanceProperties.masterRepositoryPassword)) throwCheckException("masterRepositoryPassword",odiInstanceProperties.masterRepositoryPassword);
 		if (!checkParameter(odiInstanceProperties.workRepositoryName)) throwCheckException("workRepositoryName",odiInstanceProperties.workRepositoryName);
-		if (!checkParameter(odiInstanceProperties.workRepositoryName)) throwCheckException("workRepositoryName",odiInstanceProperties.workRepositoryName);
 		if (!checkParameter(odiInstanceProperties.odiUsername)) throwCheckException("odiUsername",odiInstanceProperties.odiUsername);
 		if (!checkParameter(odiInstanceProperties.odiPassword)) throwCheckException("odiUsername",odiInstanceProperties.odiPassword);
 		
-			
+		
 		MasterRepositoryDbInfo masterInfo = new MasterRepositoryDbInfo(odiInstanceProperties.jdbcUrl, odiInstanceProperties.jdbcDriverClassName,odiInstanceProperties.masterRepositoryUsername, odiInstanceProperties.masterRepositoryPassword.toCharArray(), new PoolingAttributes());
 		WorkRepositoryDbInfo workInfo = null;
 		if (odiInstanceProperties.workRepositoryName != null){
@@ -312,9 +323,11 @@ class OdiEntityFactory implements IOdiEntityFactory{
 				inst.close();
 				throw new BitaOdiException("Cannot create OdiInstance.",e);
 		}
-		return new OdiEntityFactory(inst,bitaModelFactory);
-		
+		return inst;
 	}
 	
-	
+	public static IOdiEntityFactory createInstanceFromProperties(OdiInstanceProperties odiInstanceProperties) throws BitaOdiException{
+		return new OdiEntityFactory(OdiEntityFactory.createOdiInstanceFromProperties(odiInstanceProperties));
+	}	
 }
+

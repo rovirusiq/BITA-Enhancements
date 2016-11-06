@@ -108,6 +108,28 @@ class BitaSpockSpecification extends Specification{
 		
 		return odiObject;
 	}
+	
+	
+	
+	/********************************************************************************************
+	 *
+	 *Mock and stub for commonly used type of objects
+	 *
+	 ********************************************************************************************/
+	
+	protected <T> T StubObject(Class<T> c){
+		T entity=Stub(c);
+		//configure(entity);
+		return entity;
+	}
+	protected <T> T MockObject(Class<T> c){
+		T entity=Mock(c);
+		//configure(entity);
+		return entity;
+	}
+	
+	
+	
 	/********************************************************************************************
 	 *
 	 *Easy to use methods - DSL friendly

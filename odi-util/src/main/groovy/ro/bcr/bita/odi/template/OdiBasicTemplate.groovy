@@ -1,6 +1,7 @@
 package ro.bcr.bita.odi.template
 
 import ro.bcr.bita.model.BitaModelFactory
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory
 import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService;
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory;
@@ -13,11 +14,11 @@ import oracle.odi.core.persistence.transaction.ITransactionStatus
 
 class OdiBasicTemplate implements IOdiBasicTemplate{
 	
-	private IOdiEntityFactory odiEntityFactory;
+	private IBitaDomainFactory bitaFactory;
 	
-	protected OdiBasicTemplate(IOdiEntityFactory odiEntityFactory) throws OdiTemplateException{
+	protected OdiBasicTemplate(IBitaDomainFactory odiEntityFactory) throws OdiTemplateException{
 		if (odiEntityFactory==null) throw new OdiTemplateException("The constructor argument odiEntityfactory for the OdiBasicTemplate cannot be null");
-		this.odiEntityFactory=odiEntityFactory;
+		this.bitaFactory=odiEntityFactory;
 	}
 
 	private void executeCommand(IOdiBasicCommand cmd,Boolean inTransaction) throws OdiTemplateException{
@@ -31,8 +32,8 @@ class OdiBasicTemplate implements IOdiBasicTemplate{
 			 * That is way everything has a transaction, just that the one 
 			 * that are supposed NOT to execute in transaction get a clear() before 
 			 */
-			IOdiCommandContext ctx=this.odiEntityFactory.newOdiTemplateCommandContext();
-			txnStatus = this.odiEntityFactory.createTransaction();
+			IOdiCommandContext ctx=this.bitaFactory.newOdiTemplateCommandContext();
+			txnStatus = this.bitaFactory.createTransaction();
 			ctx.setTransactionStatus(txnStatus);
 			ctx.setInTransaction(inTransaction);
 			

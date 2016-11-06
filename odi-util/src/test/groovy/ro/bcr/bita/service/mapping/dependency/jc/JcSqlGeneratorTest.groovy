@@ -1,6 +1,6 @@
 package ro.bcr.bita.service.mapping.dependency.jc
 
-import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor;
+import ro.bcr.bita.mapping.dependency.MappingDependencyAnalyzerProcessor;
 import ro.bcr.bita.mapping.dependency.jc.JcParameters
 import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator;
 import ro.bcr.bita.model.IMessageCollection;
@@ -9,12 +9,13 @@ import ro.bcr.bita.model.MappingDependency;
 import ro.bcr.bita.model.MessageCollection;
 import ro.bcr.bita.model.MessageCollectionUtil
 
+import spock.lang.Ignore;
 import spock.lang.Specification
 
 class JcSqlGeneratorTest extends Specification{
 	
 	JcSqlGenerator subject;
-	MappingAnalyzeDependencyProcessor processor;
+	MappingDependencyAnalyzerProcessor processor;
 	JcParameters params;
 	IMessageCollection sqlDependency;
 	IMessageCollection sqlGroup;
@@ -63,13 +64,16 @@ class JcSqlGeneratorTest extends Specification{
 				IMessageCollection sqlDep=sqlDependency;
 				IMessageCollection sqlGroup=sqlGroup;
 				IMessageCollection sqlParameter=sqlJob;
+				
 				sqlDep.getNoOfKeys()==1;
 				sqlDep.getNoOfMessagesForKey("MP_A")==1;//delete dependencies
+				
 				sqlGroup.getNoOfKeys()==2;//one group, one mapping
 				sqlGroup.getNoOfMessagesForKey(params.jobGroupName)==3;//1 delete associations, 1 delete,1 create
 				sqlGroup.getNoOfMessagesForKey("MP_A")==1;//1 association group job
+				
 				sqlParameter.getNoOfKeys()==1;//one mapping
-				sqlParameter.getNoOfMessagesForKey("MP_A")==2;//1 merge for job definition, 1 merge for parameters
+				sqlParameter.getNoOfMessagesForKey("MP_A")==3;//1 delete form paramters,1 merge for job definition, 1 merge for parameters
 	}
 
 	
@@ -104,6 +108,7 @@ class JcSqlGeneratorTest extends Specification{
 				sqlDep.getKeys().containsAll("$params.jobGroupName".toString(),"MP_A","MP_B");
 	}
 	
+
 	def "Dependency SQL - 3 mapping and 2 dependencies"(){
 		given:	"The objects from setup a Set of maps and  a Set of dependencies"
 				Set<MappingDependency> stDeps=[
@@ -129,6 +134,7 @@ class JcSqlGeneratorTest extends Specification{
 				IMessageCollection sqlDep=sqlDependency;
 				IMessageCollection sqlGroup=sqlGroup;
 				IMessageCollection sqlParameter=sqlJob;
+				
 				sqlDep.getNoOfKeys()==3;
 				sqlDep.getNoOfMessagesForKey("MP_A")==3;//1 delete dependencies, add 2 dependency
 				sqlDep.getNoOfMessagesForKey("MP_B")==1;//1 delete dependencies
@@ -139,33 +145,9 @@ class JcSqlGeneratorTest extends Specification{
 				sqlGroup.getNoOfMessagesForKey("MP_B")==1;//1 association
 				sqlGroup.getNoOfMessagesForKey("MP_C")==1;//1 association
 				sqlParameter.getNoOfKeys()==3;//3 mapping
-				sqlParameter.getNoOfMessagesForKey("MP_A")==2;//1 merge, 1 merge parameters
-				sqlParameter.getNoOfMessagesForKey("MP_B")==2;//1 merge, 1 merge parameters
-				sqlParameter.getNoOfMessagesForKey("MP_C")==2;//1 merge, 1 merge parameters
-		then:	"we test the queries for the group definition"
-				
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(JcSqlQueriesTestSupport.getJobGroupJobAssociationCleanup(params.jobGroupName));
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(JcSqlQueriesTestSupport.getJobGroupCleanup(params.jobGroupName));
-				sqlGroup.getMessagesForKey(params.jobGroupName).contains(JcSqlQueriesTestSupport.getJobGroupDefinition(params.jobGroupName));
-				
-		then:	"we test the queries for the group to job association"
-		
-				sqlGroup.getMessagesForKey('MP_A').contains(JcSqlQueriesTestSupport.getJobGroupJobAssociation(params.jobGroupName,'MP_A',params.dwhRelease,params.dwhVersion));
-				sqlGroup.getMessagesForKey('MP_B').contains(JcSqlQueriesTestSupport.getJobGroupJobAssociation(params.jobGroupName,'MP_B',params.dwhRelease,params.dwhVersion));
-				sqlGroup.getMessagesForKey('MP_C').contains(JcSqlQueriesTestSupport.getJobGroupJobAssociation(params.jobGroupName,'MP_C',params.dwhRelease,params.dwhVersion));
-				
-		then:	"we test queries for job definition"
-		
-				sqlParameter.getMessagesForKey("MP_A").contains(JcSqlQueriesTestSupport.getJobDefinition('MP_A','MP_A','001',params.dwhRelease,params.dwhVersion));
-		
-		then:	"we test the queries for the paramters of MP_B"
-		
-				sqlParameter.getMessagesForKey("MP_B").contains(JcSqlQueriesTestSupport.getJobParametersDefinition(params.jobGroupName,'MP_B','LC_B',params.dwhRelease,params.dwhVersion));
-		
-		then:	"we test the queries for dependenices for MP_A"
-				
-				sqlDep.getMessagesForKey("MP_A").contains(JcSqlQueriesTestSupport.getJobDependencyCleanup('MP_A',params.dwhRelease,params.dwhVersion));
-				sqlDep.getMessagesForKey("MP_A").contains(JcSqlQueriesTestSupport.getJobDependencyDefinition('MP_B','MP_A',params.dwhRelease,params.dwhVersion));
+				sqlParameter.getNoOfMessagesForKey("MP_A")==3;//1 delete params, 1 merge, 1 merge parameters
+				sqlParameter.getNoOfMessagesForKey("MP_B")==3;//1 delete params, 1 merge, 1 merge parameters
+				sqlParameter.getNoOfMessagesForKey("MP_C")==3;//1 delete params, 1 merge, 1 merge parameters
 	}	
 	
 }

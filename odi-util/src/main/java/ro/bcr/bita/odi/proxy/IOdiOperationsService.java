@@ -3,7 +3,6 @@ package ro.bcr.bita.odi.proxy;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.model.IOdiScenario;
 
-import java.util.HashMap;
 import java.util.List;
 
 import oracle.odi.domain.mapping.finder.IMappingFinder;

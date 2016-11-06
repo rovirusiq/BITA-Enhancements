@@ -3,6 +3,7 @@ package ro.bcr.bita.service.mapping.analyze
 import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService;
 import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor;
 import ro.bcr.bita.model.BitaSpockSpecification;
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IOdiMapping;
 import ro.bcr.bita.odi.proxy.IOdiBasicPersistenceService;
@@ -19,15 +20,15 @@ class BitaMappingAnalyzerServiceTest extends BitaSpockSpecification {
 	
 	BitaMappingAnalyzerService subject;
 	IOdiBasicTemplate odiTemplate;
-	IOdiEntityFactory stOdiEntityFactory;
+	IBitaDomainFactory stBitaFactory;
 	IOdiCommandContext mCmdCtx;
 	
 	
 	def setup() {
-		stOdiEntityFactory=Stub()
+		stBitaFactory=Stub()
 		mCmdCtx=Mock();
-		odiTemplate=new OdiBasicTemplate(stOdiEntityFactory);
-		stOdiEntityFactory.newOdiTemplateCommandContext() >> mCmdCtx;
+		odiTemplate=new OdiBasicTemplate(stBitaFactory);
+		stBitaFactory.newOdiTemplateCommandContext() >> mCmdCtx;
 		subject=new BitaMappingAnalyzerService(odiTemplate);
 		
 	}

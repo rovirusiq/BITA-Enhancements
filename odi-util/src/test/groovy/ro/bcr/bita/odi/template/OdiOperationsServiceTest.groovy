@@ -1,9 +1,13 @@
-package ro.bcr.bita.odi.proxy
+package ro.bcr.bita.odi.template
 
+import ro.bcr.bita.model.BitaDomainFactory;
 import ro.bcr.bita.model.BitaModelFactoryForTesting;
 import ro.bcr.bita.model.BitaSpockSpecification
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory;
 import ro.bcr.bita.model.IOdiMapping;
+import ro.bcr.bita.odi.proxy.BitaOdiException;
+import ro.bcr.bita.odi.template.OdiOperationsService;
 
 import java.util.HashMap;
 
@@ -16,11 +20,12 @@ import oracle.odi.runtime.agent.invocation.StartupParams;
 class OdiOperationsServiceTest extends BitaSpockSpecification {
 	
 	private OdiOperationsService subject;
-	private IBitaModelFactory bitaModelFactory;
+	private IBitaDomainFactory bitaFactory;
 	
 	def setup() {
-		bitaModelFactory=BitaModelFactoryForTesting.newInstance();
-		subject=new OdiOperationsService(bitaModelFactory,stbOdiEntityFactory);
+		IBitaModelFactory bitaModelFactory=BitaModelFactoryForTesting.newInstance();
+		bitaFactory=BitaDomainFactory.newInstance(bitaModelFactory,stbOdiEntityFactory);
+		subject=new OdiOperationsService(bitaFactory);
 	}
 	
 	

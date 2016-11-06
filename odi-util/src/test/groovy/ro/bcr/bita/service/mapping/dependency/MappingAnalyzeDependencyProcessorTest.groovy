@@ -1,8 +1,10 @@
 package ro.bcr.bita.service.mapping.dependency
 
-import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor;
+import ro.bcr.bita.mapping.dependency.MappingDependencyAnalyzerProcessor;
+import ro.bcr.bita.model.BitaDomainFactory;
 import ro.bcr.bita.model.BitaSpockSpecification;
 import ro.bcr.bita.model.BitaModelFactoryForTesting;
+import ro.bcr.bita.model.IBitaDomainFactory;
 import ro.bcr.bita.model.IBitaModelFactory;
 
 
@@ -16,11 +18,12 @@ import spock.lang.Specification;
 
 class MappingAnalyzeDependencyProcessorTest extends BitaSpockSpecification{
 
-	MappingAnalyzeDependencyProcessor subject;
-	IBitaModelFactory bitaModelFactory=BitaModelFactoryForTesting.newInstance();
+	MappingDependencyAnalyzerProcessor subject;
+	IBitaDomainFactory bitaFactory;
 	
 	def setup() {
-		subject=new MappingAnalyzeDependencyProcessor(bitaModelFactory.newMappingDeppendencyRepository());
+		bitaFactory=BitaDomainFactory.newInstance(BitaModelFactoryForTesting.newInstance(),stbOdiEntityFactory);
+		subject=new MappingDependencyAnalyzerProcessor(bitaFactory.newMappingDeppendencyRepository());
 	}
 	
 	def "Test result methods - 1 mapping"(){
@@ -39,7 +42,7 @@ class MappingAnalyzeDependencyProcessorTest extends BitaSpockSpecification{
 				);
 				Mapping mp1=BITA_MOCK_ODI_MAPPING("MP_1",nd1,nd2);
 		when:	"the processor is called for that mapping "
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp1));
+				subject.processMapping(bitaFactory.newOdiMapping(mp1));
 		then:	"the results returned should be correct"
 				subject.getAllMappingNames().contains("MP_1");
 				subject.getAllMappingNames().size()==1;
@@ -79,8 +82,8 @@ class MappingAnalyzeDependencyProcessorTest extends BitaSpockSpecification{
 				);
 				Mapping mp2=BITA_MOCK_ODI_MAPPING("MP_2",xn1,xn2);
 		when:	"the processor is called for that mapping "
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp1));
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp2));
+				subject.processMapping(bitaFactory.newOdiMapping(mp1));
+				subject.processMapping(bitaFactory.newOdiMapping(mp2));
 		then:	"the results returned should be correct"
 				subject.getAllMappingNames().contains("MP_1");
 				subject.getAllMappingNames().contains("MP_2");
@@ -138,9 +141,9 @@ class MappingAnalyzeDependencyProcessorTest extends BitaSpockSpecification{
 				);
 				Mapping mp3=BITA_MOCK_ODI_MAPPING("MP_3",yn1,yn2);
 		when:	"the processor is called for that mapping "
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp1));
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp2));
-				subject.processMapping(bitaModelFactory.newOdiMapping(mp3));
+				subject.processMapping(bitaFactory.newOdiMapping(mp1));
+				subject.processMapping(bitaFactory.newOdiMapping(mp2));
+				subject.processMapping(bitaFactory.newOdiMapping(mp3));
 		then:	"the results returned should be correct"
 				subject.getAllMappingNames().contains("MP_1");
 				subject.getAllMappingNames().contains("MP_2");

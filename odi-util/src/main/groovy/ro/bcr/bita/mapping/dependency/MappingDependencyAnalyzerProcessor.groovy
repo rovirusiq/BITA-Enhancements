@@ -12,12 +12,12 @@ import ro.bcr.bita.odi.proxy.BitaOdiException;
 import groovy.transform.CompileStatic;
 
 @CompileStatic
-class MappingAnalyzeDependencyProcessor implements IMappingAnalyzeProcessor{
+class MappingDependencyAnalyzerProcessor implements IMappingAnalyzeProcessor{
 	
 	private final IMappingDependencyRepositoryCyclicAware repo;
 	private final Set<IOdiMapping> allMappings=[];
 	
-	public MappingAnalyzeDependencyProcessor(IMappingDependencyRepositoryCyclicAware repository) {
+	public MappingDependencyAnalyzerProcessor(IMappingDependencyRepositoryCyclicAware repository) {
 		this.repo=repository;
 	}
 

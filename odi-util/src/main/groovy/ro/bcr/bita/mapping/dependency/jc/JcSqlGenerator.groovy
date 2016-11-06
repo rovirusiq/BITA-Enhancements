@@ -1,7 +1,7 @@
 package ro.bcr.bita.mapping.dependency.jc
 
 import ro.bcr.bita.mapping.analyze.IMappingAnalyzeProcessor;
-import ro.bcr.bita.mapping.dependency.MappingAnalyzeDependencyProcessor;
+import ro.bcr.bita.mapping.dependency.MappingDependencyAnalyzerProcessor;
 import ro.bcr.bita.model.IMessageCollection;
 import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.MappingDependency;
@@ -17,12 +17,12 @@ import groovy.transform.TypeCheckingMode;
 class JcSqlGenerator implements IMappingAnalyzeProcessor{
 	
 	
-	private final JcSqlGeneratorHelper sqlGenerator=new JcSqlGeneratorHelper();
+	private final JcSqlCommandsHelper sqlGenerator=new JcSqlCommandsHelper();
 		
 	@Delegate
-	private MappingAnalyzeDependencyProcessor prc;
+	private MappingDependencyAnalyzerProcessor prc;
 	
-	public JcSqlGenerator (MappingAnalyzeDependencyProcessor processor) {
+	public JcSqlGenerator (MappingDependencyAnalyzerProcessor processor) {
 		this.prc=processor;
 	}
 	
@@ -45,17 +45,25 @@ class JcSqlGenerator implements IMappingAnalyzeProcessor{
 		
 		
 		for (IOdiMapping mapping:mps) {
-			//add job to the job definitions
-			sqlJobDependencies << [mapping.getName(),sqlGenerator.generateSqlDepCleanup(params,mapping.getName())]
-			sqlJobDefinition << [mapping.getName(),sqlGenerator.generateSqlJobDefinition(params,mapping.getName())]
-			sqlJobDefinition << [mapping.getName(),sqlGenerator.generateSqlJobParameters(params,mapping.getName(),mapping.getLeadingSource())]
-			sqlGroupDefinition << [mapping.getName(),sqlGenerator.generateSqlGroupJobs(params,mapping.getName())]
+			
+			String jobId=params.generateJobId(mapping.getName());
+			
+			//delete the dependencies
+			sqlJobDependencies << [mapping.getName(),sqlGenerator.generateSqlDependencyInit(params,jobId)].flatten();
+			//create the job definistion
+			sqlJobDefinition << [mapping.getName(),sqlGenerator.generateSqlJobDefinition(params,jobId,mapping.getName(),mapping.getLeadingSource(),mapping.getParameterListOfScenario(params.getScenarioVersion()),false)].flatten();
+			//add to the group Definition
+			sqlGroupDefinition << [mapping.getName(),sqlGenerator.generateSqlGroupJobs(params,jobId)].flatten();
 		}
 		
 		Set<MappingDependency> dpds=this.prc.getDependencies();
 		
 	 	for (MappingDependency mp:dpds) {
-			sqlJobDependencies << [mp.who(),this.sqlGenerator.generateSqlDependency(params,mp.who(),mp.on())]
+			 
+			String whoJobId=params.generateJobId(mp.who());
+			String onJobId=params.generateJobId(mp.on());
+			 
+			sqlJobDependencies << [mp.who(),this.sqlGenerator.generateSqlDependency(params,whoJobId,onJobId)].flatten()
 		}
 	}
 }

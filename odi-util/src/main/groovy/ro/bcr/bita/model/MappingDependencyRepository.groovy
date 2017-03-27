@@ -1,8 +1,8 @@
 package ro.bcr.bita.model
 
+import java.util.Set
 
-//TODO more detailed exception about Cyclic dependencies detected
-class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicAware<String,String> {
+class MappingDependencyRepository implements IMappingRepository {
 	
 	
 	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();
@@ -73,6 +73,17 @@ class MappingDependencyRepository implements IMappingDependencyRepositoryCyclicA
 		};
 		if (faulty.size()>0) throw new BitaCyclicDependencyException("Cyclic Mapping Dependency detected",faulty);
 		return deps; 
+	}
+
+
+	@Override
+	public Set<String> getAllMappingNames() {
+		Set uniqueMappings=[];
+		this.repo.each{String key,MDREntry v->
+			uniqueMappings.addAll(v.sourceFor);
+			uniqueMappings.addAll(v.targetFor);
+		}
+		return uniqueMappings;
 	}
 
 }

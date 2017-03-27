@@ -1,4 +1,4 @@
-MERGE INTO O_LDS_META.CMT_JC_PARAMETER e
+MERGE INTO ${jcSchemaName}.CMT_JC_PARAMETER e
 using (
 select '$jobId' as job_id,'$dwhVersion' as dwh_version_cd,'$dwhRelease' as release_cd,'$jobGroupName' as jobgroup_id,'GLOBAL.GVGRAN_COB_DT' as parameter_name,'@cob_dt@' as parameter_value,null from dual
 union

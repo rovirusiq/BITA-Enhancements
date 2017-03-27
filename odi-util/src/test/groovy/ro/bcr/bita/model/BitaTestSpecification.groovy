@@ -4,12 +4,16 @@ import ro.bcr.bita.odi.proxy.IOdiRemoteEntityFactory;
 import ro.bcr.bita.odi.proxy.OdiScenExecutionEnv;
 import ro.bcr.bita.odi.proxy.OdiScenExecutionStatus;
 
+
+
+import spock.lang.Ignore
 import spock.lang.Shared;
 import spock.lang.Specification
 
 
 //FIX this and apply it to the other mapping also
 
+@Ignore
 class BitaTestSpecification extends Specification {
 	
 	protected setup() {

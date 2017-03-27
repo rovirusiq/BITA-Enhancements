@@ -51,6 +51,10 @@ public interface IOdiEntityFactory {
 	
 	public abstract IOdiBasicPersistenceService newOdiBasicPersistenceService();
 	/************************************************************************************************************
+	 *SQL Connection related
+	 ************************************************************************************************************/
+	public abstract groovy.sql.Sql createSqlConnection(String physicalTopologyServer);
+	/************************************************************************************************************
 	 *Cleanup methods
 	 ************************************************************************************************************/
 	public abstract void cleanup();

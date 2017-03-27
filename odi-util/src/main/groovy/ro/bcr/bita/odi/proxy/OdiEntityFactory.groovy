@@ -262,6 +262,14 @@ class OdiEntityFactory implements IOdiEntityFactory{
 			org.apache.commons.logging.LogFactory.getLog("oracle.odi").error("Class OdiEntityFactory method cleanup encountered and exception when trying to close the OdiInstance",ex);
 		}
 	}
+	
+	public  groovy.sql.Sql createSqlConnection(String physicalTopologyServer){
+		SqlUtil sqlUtil=new SqlUtil(this);
+		return sqlUtil.newSqlInstanceFromServer(physicalTopologyServer);
+	}
+	
+	
+	
 	/********************************************************************************************
 	 *
 	 *Own Instance methods
@@ -328,6 +336,8 @@ class OdiEntityFactory implements IOdiEntityFactory{
 	
 	public static IOdiEntityFactory createInstanceFromProperties(OdiInstanceProperties odiInstanceProperties) throws BitaOdiException{
 		return new OdiEntityFactory(OdiEntityFactory.createOdiInstanceFromProperties(odiInstanceProperties));
-	}	
+	}
+	
+		
 }
 

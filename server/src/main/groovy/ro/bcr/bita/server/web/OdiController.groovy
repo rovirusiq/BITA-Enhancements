@@ -34,7 +34,7 @@ public class OdiController {
 	private RestOdiOperationsService restOdiService;
 	
 	
-	private AtomicLong counter;
+	private AtomicLong counter=new AtomicLong(1L);
 	
 	@RequestMapping(value="odi-scenario-execution",method=RequestMethod.POST,produces= ["application/xml","application/json"])
 	@ResponseBody

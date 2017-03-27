@@ -10,7 +10,7 @@ import groovy.transform.TypeChecked;
 @TypeChecked
 class MessageCollectionContainer implements IMessageCollectionContainer {
 	
-	private Map<String,IMessageCollection>mapOfMsgCollections=[:];
+	private Map<String,IMessageCollection>mapOfMsgCollections=new LinkedHashMap<String,IMessageCollection>();
 	private IBitaModelFactory bitaModelFactory=new BitaModelFactory();
 	
 	

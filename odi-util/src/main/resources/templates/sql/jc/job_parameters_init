@@ -1,1 +1,1 @@
-DELETE FROM  O_LDS_META.CMT_JC_PARAMETER where job_id='$jobId'
+DELETE FROM  ${jcSchemaName}.CMT_JC_PARAMETER where job_id='$jobId'

@@ -1,0 +1,97 @@
+String getUserEncodedPass(String userName) {
+  String retVal = "";
+  try {
+    String sql = "select pass from snp_user where wuser_name = :usr";
+    java.sql.Connection masterRepo = odiRef.getJDBCConnectionFromLSchema("JC_ODI_MASTER");
+    PreparedStatement pstmt = masterRepo.prepareStatement(sql);
+    pstmt.setString(1,userName);
+    ResultSet rs = pstmt.executeQuery();
+    if (rs.next()) {
+      logBatchTrace("getUserEncodedPass pass:" + rs.getString(1), "AUDIT");
+      retVal = rs.getString(1);
+    }
+    rs.close();
+    pstmt.close();
+    masterRepo.close();
+
+  } catch (Exception e) {
+    logBatchTrace("getUserEncodedPass:" + e.getMessage, "SEVERE");
+  } finally {
+    return retVal;
+  }
+}
+
+String getWorkRepName() {
+  String retVal = "";
+  try {
+    String sql = "select rep_name from snp_loc_repw";
+    Statement stmt = workRepositoryConnection.createStatement();
+    ResultSet rs = stmt.executeQuery(sql);
+    if (rs.next()) {
+      logBatchTrace("getWorkRepName repo name:" + rs.getString(1), "AUDIT");
+      retVal = rs.getString(1);
+    }
+    rs.close();
+    stmt.close();    
+  } catch (Exception e) {
+    logBatchTrace("getWorkRepName:" + e.getMessage, "SEVERE");    
+  } finally {
+    return retVal;
+  }
+}
+
+
+
+
+try {
+    //get the user's encoded password from database
+    String encPass = getUserEncodedPass(userName);
+    
+    //get the work repository name
+    workRepName = getWorkRepName();
+  
+    // needed for decrypting password stored in ODI topology connections
+    IOdiCipher odiCipher = CipherFactory.getOdiCipherWithoutOdiInstance(workRepositoryConnection, false);
+
+    //PoolingAttributes(int pInitialPoolSize, int pMaxPoolSize, int pMinPoolSize, int pInactiveConnectionTimeout, int pStatementCacheSize) 
+    PoolingAttributes poolAttr = new PoolingAttributes(8, 32, 4, 700, 1000); 
+  
+    //MasterRepositoryDbInfo(java.lang.String pJdbcUrl, java.lang.String pJdbcDriver, java.lang.String pJdbcUsername, char[] pJdbcPassword, PoolingAttributes pPoolingAttributes);
+    logBatchTrace("INIT: connecting to master repository " + jdbcUrl + " user:" + jdbcUsername, "FINEST");
+  
+    MasterRepositoryDbInfo masterRepoInfo = new MasterRepositoryDbInfo(jdbcUrl, jdbcDriver, jdbcUsername, odiCipher.decryptPassword(jdbcEncodedPass.toCharArray()), poolAttr);
+    
+    logBatchTrace("INIT: connected to master repository " + jdbcUrl + " user:" + jdbcUsername, "AUDIT");
+    
+    //WorkRepositoryDbInfo(java.lang.String pWorkName, PoolingAttributes pPoolingAttributes);
+    logBatchTrace("INIT: connecting to work repository " + workRepName, "FINEST");
+    
+    WorkRepositoryDbInfo workRepoInfo = new WorkRepositoryDbInfo(workRepName, poolAttr);
+    
+    logBatchTrace("INIT: connected to work repository " + workRepName, "AUDIT");
+  
+    OdiInstanceConfig odiConfig = new OdiInstanceConfig(masterRepoInfo, workRepoInfo);
+    //create odiInstance
+    odiInstance = OdiInstance.createInstance(odiConfig);
+    
+    //create an Authentication object 
+    logBatchTrace("INIT: trying userName:" + userName + " pass:" + encPass, "FINEST");
+    authentication = odiInstance.getSecurityManager().createAuthentication(userName, odiCipher.decryptPassword(encPass.toCharArray()));
+    logBatchTrace("INIT: authenticated as " + userName + " pass:" + encPass, "AUDIT");
+    odiInstance.getSecurityManager().setCurrentThreadAuthentication(authentication);
+  
+    //define runtime agent
+    if (odiInstance != null) {
+      logMessage("creating RuntimeAgent");
+      
+      ra = new RuntimeAgent(odiInstance, userName, odiCipher.decryptPassword(encPass.toCharArray()));
+     
+      logMessage("RuntimeAgent created");
+      logBatchTrace("INIT: RuntimeAgent created", "AUDIT");
+    }
+  
+  } catch (Exception e) {
+    logError("INIT:" + e.getMessage());
+    logBatchTrace("INIT:" + e.getMessage(), "SEVERE");
+    throw e;
+  }

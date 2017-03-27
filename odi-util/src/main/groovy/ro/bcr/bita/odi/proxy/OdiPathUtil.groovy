@@ -116,7 +116,7 @@ class OdiPathUtil {
 			if (alreadyExistingFolders==null) {
 				alreadyExistingFolders=[]
 			}
-			alreadyExistingFolders.addAll(folders);
+			alreadyExistingFolders.addAll(folders as String[]);
 			
 			mapPaths.put(lst[1],alreadyExistingFolders);
 		

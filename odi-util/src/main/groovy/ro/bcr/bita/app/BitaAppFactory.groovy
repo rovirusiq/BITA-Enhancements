@@ -2,65 +2,70 @@ package ro.bcr.bita.app
 
 import ro.bcr.bita.core.IBitaGlobals
 import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService
+import ro.bcr.bita.mapping.analyze.IJcGroupIdentificationStrategy
 import ro.bcr.bita.mapping.analyze.IMappingAnalyzerService
-import ro.bcr.bita.mapping.dependency.MappingDependencyAnalyzerProcessor
-import ro.bcr.bita.mapping.dependency.jc.JcJobIdGenerator;
-import ro.bcr.bita.mapping.dependency.jc.JcParameters
-import ro.bcr.bita.mapping.dependency.jc.JcSqlCommandsHelper;
-import ro.bcr.bita.mapping.dependency.jc.JcSqlGenerator
-import ro.bcr.bita.mapping.dependency.jc.JcStreamSqlExecutor
-import ro.bcr.bita.model.BitaDomainFactory;
+import ro.bcr.bita.mapping.analyze.JcDalGroupStrategy
+import ro.bcr.bita.mapping.analyze.JcJobIdGenerator
+import ro.bcr.bita.mapping.analyze.JcLdsGroupStrategy
+import ro.bcr.bita.mapping.analyze.JcRequestContext
+import ro.bcr.bita.mapping.analyze.JcSqlCommandsGenerator
+import ro.bcr.bita.mapping.analyze.MappingDependencyAnalyzerProcessor
+import ro.bcr.bita.model.BitaDomainFactory
 import ro.bcr.bita.model.BitaModelFactory
-import ro.bcr.bita.model.IBitaDomainFactory;
+import ro.bcr.bita.model.IBitaDomainFactory
 import ro.bcr.bita.model.IBitaModelFactory
 import ro.bcr.bita.model.IMappingDependencyRepositoryCyclicAware
 import ro.bcr.bita.model.IMessageCollection
 import ro.bcr.bita.model.MappingDependencyRepository
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory
 import ro.bcr.bita.odi.proxy.OdiEntityFactory
-import ro.bcr.bita.odi.proxy.SqlUtil
-import ro.bcr.bita.sql.BitaBatchSql
-import ro.bcr.bita.sql.BitaSqlSimpleOperations
-import ro.bcr.bita.sql.IBitaBatchSql
-import ro.bcr.bita.sql.IBitaSqlSimpleOperations
-
+import ro.bcr.bita.model.BitaDomainFactoryForMappingsWithMultipleTargets
+import ro.bcr.bita.app.OraclePhysicalServerConnectionProvider
 import oracle.odi.core.OdiInstance
 
 class BitaAppFactory implements IBitaGlobals{
 	
 	private final IBitaModelFactory bitaModelFactory=BitaModelFactory.newInstance();
 	private final IOdiEntityFactory odiEntityFactory;
-	private final IBitaDomainFactory bitaDomainfactory;
+	private final IBitaDomainFactory bitaDomainFactory;
 	
 	private BitaAppFactory(OdiInstance odiInstance) {
 		this.odiEntityFactory=OdiEntityFactory.newInstance(odiInstance);
-		this.bitaDomainfactory=BitaDomainFactory.newInstance(bitaModelFactory,this.odiEntityFactory);
+		this.bitaDomainFactory=BitaDomainFactoryForMappingsWithMultipleTargets.newInstance(bitaModelFactory,this.odiEntityFactory);
 	}
-	
+	/********************************************************************************************
+	 *
+	 *Static factory method initialization
+	 *
+	 ********************************************************************************************/
 	public static BitaAppFactory newInstance(OdiInstance odiInstance) {
 		return new BitaAppFactory(odiInstance);
 	}
 	
-
-	private groovy.sql.Sql fetchDbConnection(String oracleServerName){
-		return (new SqlUtil(this.odiEntityFactory)).newSqlInstanceFromServer(oracleServerName,"O_LDS_META","O_LDS_META");
-	}
 	/********************************************************************************************
 	 *
-	 *Public methods. Usefull for creating second level objects
+	 *Private/Protected helper methods 
 	 *
 	 ********************************************************************************************/
 	
-	public JcParameters newJcParameters(String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
-		return JcParameters.newParameters(jobGroupName,dwhRelease,dwhVersion,scenarioVersion,new JcJobIdGenerator(),true);
-	}
-	
-	public IMappingDependencyRepositoryCyclicAware createMappingDependencyRepository() {
+	protected IMappingDependencyRepositoryCyclicAware createMappingDependencyRepository() {
 		return new MappingDependencyRepository();
 	}
 	
-	public JcSqlCommandsHelper newJcSqlCommandHelper() {
-		return new JcSqlCommandsHelper();
+	protected JcSqlCommandsGenerator newJcSqlCommandGenerator() {
+		return new JcSqlCommandsGenerator();
+	}
+	
+	protected MappingDependencyAnalyzerProcessor newMappingDependencyAnalyzerProcessor() {
+		return new MappingDependencyAnalyzerProcessor(this.createMappingDependencyRepository());
+	}
+	
+	protected IBitaDomainFactory getBitaDomainFactory() {
+		return this.bitaDomainFactory;
+	}
+	
+	protected IOdiEntityFactory getOdiEntityFactory() {
+		return this.odiEntityFactory;
 	}
 	
 	/********************************************************************************************
@@ -68,64 +73,48 @@ class BitaAppFactory implements IBitaGlobals{
 	 *Full Functional Medium level components
 	 *
 	 ********************************************************************************************/
-	
-	public JcStreamSqlExecutor newJcStreamSqlExecutor(String oracleServerName,int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
-		return new JcStreamSqlExecutor(createMappingDependencyRepository()
-				,newSqlExecutor(oracleServerName)
-				,newJcParameters(dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
-				,frequencyOfCommits
-				);
-	}
-	
-	public JcSqlGenerator newJcSqlGenerator() {
-		return new JcSqlGenerator(new MappingDependencyAnalyzerProcessor(createMappingDependencyRepository()));
-	}
-	
 	public IMappingAnalyzerService newMappingAnalyzerService() {
-		IMappingAnalyzerService rsp=new BitaMappingAnalyzerService(this.bitaDomainfactory.newOdiTemplate());
+		IMappingAnalyzerService rsp=new BitaMappingAnalyzerService(this.bitaDomainFactory.newOdiTemplate());
 		return rsp;
-	}
-	
-	public MappingDependencyAnalyzerProcessor newMappingDependencyAnalyzerProcessor() {
-		return new MappingDependencyAnalyzerProcessor(this.createMappingDependencyRepository());
-	}
-	
-	public IBitaSqlSimpleOperations newSqlExecutor(String oracleServerName) {
-		return new BitaSqlSimpleOperations(fetchDbConnection(oracleServerName));
-	}
-	
-	public IBitaBatchSql newBatchSqlExecutor(String oracleServerName) {
-		return new BitaBatchSql(fetchDbConnection(oracleServerName));
 	}
 	
 	public IMessageCollection newMessageCollection(String id) {
 		return bitaModelFactory.newMessageCollection(id);
 	}
 	
+	public JcRequestContext newJcRequestContext(String dwhVersion,IJcGroupIdentificationStrategy grpIdentifcationStrategy) {
+		return new JcRequestContext(dwhVersion,grpIdentifcationStrategy);
+	}
+	
+	public IBitaJdbcConnectionProvider newOracleConnectionProvider(String topologyServerName) {
+		return new OraclePhysicalServerConnectionProvider(topologyServerName,odiEntityFactory)
+	}
+	
+	
 	/********************************************************************************************
 	 *
 	 *High Level Functions
 	 *
 	 ********************************************************************************************/
-	
-	public IJcMetadataCreator newJcMetadataBatchCreator(String oracleServerName,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
-		return new JcMetadataBatchCreator(
-			newJcParameters(dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
-			,newJcSqlGenerator()
-			,newMappingAnalyzerService()
-			,newBatchSqlExecutor(oracleServerName)
-			,newMessageCollection("sqlGroup"),
-			,newMessageCollection("sqlJob")
-			,newMessageCollection("sqlDependencies")
-			);
+	private JcGroupsCreator newConfiguredJcGroupsCreator(String dwhVersionCd,String topologyServerName) {
+		JcGroupsCreator jcGroups=new JcGroupsCreator(bitaDomainFactory,odiEntityFactory);
+		jcGroups.setJdbcProvider(newOracleConnectionProvider(topologyServerName));
+		jcGroups.setDwhVersionCode(dwhVersionCd);
+		jcGroups.setJobIdPolicy(new JcJobIdGenerator());
+		return jcGroups;
 	}
-
-	public IJcMetadataCreator newJcMetadataStreamCreator(String oracleServerName, int frequencyOfCommits,String dwhRelease,String dwhVersion,String jobGroupName,String scenarioVersion=BITA_ODI_SCENARIO_VERSION) {
-		return new JcMetadataStreamCreator(
-			newJcStreamSqlExecutor(oracleServerName,frequencyOfCommits,dwhRelease,dwhVersion,jobGroupName,scenarioVersion)
-			,newMappingAnalyzerService()
-			);
-		
+	
+	public IJcJobGroupsCreator newJcJobGroupsCreatorForBase(String dwhVersionCd,String topologyServerName) {
+		JcGroupsCreator jcGroups=newConfiguredJcGroupsCreator(dwhVersionCd,topologyServerName);
+		IJcGroupIdentificationStrategy grpS=new JcDalGroupStrategy(newJcSqlCommandGenerator());	
+		jcGroups.setJcGroupIdentificationStrategy(grpS);
+		return jcGroups;
+	}
+	public IJcJobGroupsCreator newJcJobGroupsCreatorForLds(String jobGroupName,String dwhVersionCd,String topologyServerName) {
+		JcGroupsCreator jcGroups=newConfiguredJcGroupsCreator(dwhVersionCd,topologyServerName);
+		IJcGroupIdentificationStrategy grpS=new JcLdsGroupStrategy(jobGroupName,newJcSqlCommandGenerator());
+		jcGroups.setJcGroupIdentificationStrategy(grpS);
+		return jcGroups;
 	}
 	
 }

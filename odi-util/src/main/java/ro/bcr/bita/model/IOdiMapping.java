@@ -9,6 +9,7 @@ public interface IOdiMapping {
 	public String getName() throws BitaModelException;
 	public List<String> identifySources() throws BitaModelException;
 	public String identifyTarget() throws BitaModelException;
+	public List<String>identifyTargets() throws BitaModelException;
 	public String getLeadingSource() throws BitaModelException;
 	public String getFullPathName() throws BitaModelException;
 	public boolean isDataAcquisitionMapping() throws BitaModelException;

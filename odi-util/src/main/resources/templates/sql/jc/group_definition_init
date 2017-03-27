@@ -1,1 +1,1 @@
-DELETE FROM O_LDS_META.CMT_JC_JOBGROUP where JOBGROUP_ID='$jobGroupName'
+DELETE FROM ${jcSchemaName}.CMT_JC_JOBGROUP where JOBGROUP_ID='$jobGroupName'

@@ -1,4 +1,4 @@
-MERGE INTO O_LDS_META.CMT_JC_PARAMETER e
+MERGE INTO ${jcSchemaName}.CMT_JC_PARAMETER e
 using (
 select
 '$jobId' as job_id
@@ -13,7 +13,7 @@ select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SOURC
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_DEBUG_MODE_IND')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_DEBUG_MODE_IND','Y',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_AUDIT_EXECUTION_ID')) {%>union
-select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_AUDIT_EXECUTION_ID','',null from dual
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_AUDIT_EXECUTION_ID','@audit_execution_id@',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_ENTITY_CD')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_ENTITY_CD','BCR',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_FILE_NAME')) {%>union
@@ -38,6 +38,10 @@ select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TECHN
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_VERSION_NUMBER','',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_LOAD_BATCH_ID')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_LOAD_BATCH_ID','@batch_id@',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_TNT_CD_LIST')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TNT_CD_LIST','ALL',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_TNT_REPROCESSING_IND')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TNT_REPROCESSING_IND','N',null from dual
 <%}%><%}%>) n
 on (e.job_id=n.job_id and e.dwh_version_cd=n.dwh_version_cd and e.release_cd=n.release_cd and e.jobgroup_id=n.jobgroup_id)
 when not matched then

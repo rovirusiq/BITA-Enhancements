@@ -1,6 +1,9 @@
 package ro.bcr.bita.odi.script
 
-class NonExistentMessageCollectionException extends IllegalArgumentException {
+import groovy.transform.CompileStatic
+
+@CompileStatic
+public class NonExistentMessageCollectionException extends IllegalArgumentException {
 
 	/**
 	 * @param arg0

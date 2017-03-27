@@ -22,8 +22,8 @@ class OdiMapping implements IOdiMapping {
 	
 	private static final String LZ_PREFIX="LZ_";
 	private static final String BASE_PREFIX="LC_";
-	private static final String TEMP_PREFIX="LC_";
-	private static final String STAGE_PREFIX="LC_";
+	private static final String TEMP_PREFIX="TEMP_";
+	private static final String STAGE_PREFIX="ST_";
 	
 	private static final List<String> DATA_ACQUISITON_PREFIXES=[LZ_PREFIX,BASE_PREFIX];
 	private static final List<String> SOURCES_PREFIXES=[LZ_PREFIX,BASE_PREFIX,TEMP_PREFIX,STAGE_PREFIX];
@@ -31,9 +31,10 @@ class OdiMapping implements IOdiMapping {
 	
 	private boolean isAnalyzed=false;
 	private List<String> sourceTables=[];
-	private String targetTable;
+	private List<String> targetTables=[];
 	private String leadingSource="XXX_DMY";
 	private boolean isDataAcquisitionMapping=false;
+	private final boolean allowsMultipleTargets;
 	
 	
 	
@@ -43,10 +44,15 @@ class OdiMapping implements IOdiMapping {
 	
 	
 	protected OdiMapping(Mapping object,IBitaDomainFactory bitaFactory) {
+		this(object,bitaFactory,false);
+	}
+	
+	protected OdiMapping(Mapping object,IBitaDomainFactory bitaFactory,boolean allowsMultipleTargets) {
 		if (object==null) throw new BitaModelException("Mapping parameter cannot be null for constructor [OdiMapping(oracle.odi.domain.mapping.Mapping)]");
 		if (bitaFactory==null) throw new BitaModelException("BitaFactory parameter cannot be null for constructor [OdiMapping(oracle.odi.domain.mapping.Mapping)]");
 		this.odiObject=object;
 		this.bitaFactory=bitaFactory;
+		this.allowsMultipleTargets=allowsMultipleTargets;
 	}
 	
 	/********************************************************************************************
@@ -62,12 +68,13 @@ class OdiMapping implements IOdiMapping {
 		this.sourceTables.add(name);
 	}
 	
-	protected void setTargetTable(String name) {
-		this.targetTable=name;
+	protected void addTargetTable(String name) {
+		this.targetTables << name;
 	}
 	
-	protected String getTargetTable() {
-		return this.targetTable;
+	
+	protected List<String> getTargetTables() {
+		return this.targetTables;
 	}
 	
 	protected void setLeadingSource(String leadingSource) {
@@ -76,10 +83,17 @@ class OdiMapping implements IOdiMapping {
 	
 	
 	protected void analyzeLeadingSource() {
+		
+		if (this.sourceTables.size()<=0) {
+			return;
+		}
+		
 		if (this.sourceTables.size()==1) {
 			this.setLeadingSource(this.sourceTables[0]);
 			return;
 		}
+		
+		boolean wasSet=false;
 		
 		String mappingName=this.getName();
 		for (String lName:this.sourceTables) {
@@ -90,18 +104,26 @@ class OdiMapping implements IOdiMapping {
 					break;
 				}
 			}
-			if (this.getName().indexOf(name2)==4) {
+			if (mappingName.indexOf(name2)==4) {
 				this.setLeadingSource(lName);
+				wasSet=true;
 			}
 		}
+		if (!wasSet) {
+			this.setLeadingSource(this.sourceTables[0]);
+		}
+	}
+	
+	protected Boolean getAllowsMultipleTargets() {
+		return this.allowsMultipleTargets;
 	}
 	
 	
 	protected void analyzeTypeOfMapping() {
 		boolean foundPrefix=false;
-		if ((this.sourceTables.size()==1) && (this.getTargetTable()) ){
+		if ((this.sourceTables.size()==1) && (this.getTargetTables().size()==1) ){
 			DATA_ACQUISITON_PREFIXES.each{String s->
-				if (this.getTargetTable().startsWith(s)) foundPrefix=true;
+				if (this.getTargetTables()[0].startsWith(s)) foundPrefix=true;
 			}
 			
 		} 
@@ -145,15 +167,15 @@ class OdiMapping implements IOdiMapping {
 			  }
 			  if (isTarget) {
 				  counterForTarget++;
-				  if (counterForTarget>1) throw new BitaModelException("More than one target have been identified for the mapping[${this.getName()}]: ${this.getTargetTable()},${lComponent.getBoundObjectName()} ");
-				  this.setTargetTable(lComponent.getBoundObjectName());
+				  if ((counterForTarget>1) && (!this.getAllowsMultipleTargets()) ) throw new BitaModelException("More than one target have been identified for the mapping[${this.getName()}]: ${this.getTargetTables()},${lComponent.getBoundObjectName()} ");
+				  this.addTargetTable(lComponent.getBoundObjectName());
 			  }
 		  
 		  }
 		
 		}
 		
-		if (this.sourceTables.size()<=0) throw new BitaModelException("No source table was identified for the mapping mapping[${this.odiObject.name}]");
+		if (this.sourceTables.size()<=0) throw new BitaModelException("No source table was identified for the mapping mapping[${this.odiObject.name}]. This may also be a sign that the map has somethin incorrect not necesserly that it has no source.");
 		if (counterForTarget<=0) throw new BitaModelException("No target table was identified for the mapping[${this.odiObject.name}]");
 		
 		this.analyzeLeadingSource();
@@ -168,7 +190,7 @@ class OdiMapping implements IOdiMapping {
 		try {
 			scen=odiOperationsService.findScenarioForMapping(this,version);
 		} catch (BitaOdiException ex) {
-			throw new BitaModelException("Exception occurent in the model",ex);
+			throw new BitaModelException("Exception occurend in the model",ex);
 		}
 		return scen;
 	}
@@ -186,7 +208,13 @@ class OdiMapping implements IOdiMapping {
 	@Override
 	public String identifyTarget() throws BitaModelException {
 		this.analyze();
-		return this.targetTable;
+		return this.targetTables[0];
+	}
+	
+	@Override
+	public List<String> identifyTargets() throws BitaModelException {
+		this.analyze();
+		return this.targetTables.collect{it};
 	}
 
 	@Override

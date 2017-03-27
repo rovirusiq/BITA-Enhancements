@@ -13,8 +13,9 @@ import groovy.transform.CompileStatic;
 
 
 //TODO add options- readonly, check for modification, frequency for commit/clear
+//TODO add options- to see if commits are allowed
 @CompileStatic
-class BitaMappingAnalyzerService implements IMappingAnalyzerService{
+public class BitaMappingAnalyzerService implements IMappingAnalyzerService{
 	private List<IMappingAnalyzeProcessor> procs=[];
 	private final IOdiBasicTemplate odiTemplate;
 	
@@ -29,9 +30,16 @@ class BitaMappingAnalyzerService implements IMappingAnalyzerService{
 
 	@Override
 	public void analyzeMappingsFrom(String... odiPaths) {
+		
+		this.procs.each{def p->
+			if (p instanceof IMappingAnalyzeExtendedProcessor) {
+				p.beforeAnalyze();
+			}
+		}
+		
+		
 		IOdiBasicCommand cmd={IOdiCommandContext ctx ->
 			ctx.findMappings(odiPaths).each{IOdiMapping m->
-				
 				this.procs.each{IMappingAnalyzeProcessor p->
 					p.processMapping(m);
 				}
@@ -47,6 +55,12 @@ class BitaMappingAnalyzerService implements IMappingAnalyzerService{
 		} as IOdiBasicCommand;
 		
 		this.odiTemplate.executeWithoutTransaction(cmd);
+		
+		this.procs.each{def p->
+			if (p instanceof IMappingAnalyzeExtendedProcessor) {
+				p.afterAnalyze();
+			}
+		}
 	}
 
 }

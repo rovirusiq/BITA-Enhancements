@@ -1,4 +1,4 @@
-MERGE INTO O_LDS_META.CMT_JC_JOB j
+MERGE INTO ${jcSchemaName}.CMT_JC_JOB j
 using (
 select '$jobId' as JOB_ID,'$dwhVersion' as DWH_VERSION_CD,'$dwhRelease' as RELEASE_CD,'$mappingName' as ODI_SCENARIO_NAME,'$mappingScenarioVersion' as ODI_SCENARIO_VERSION
 , '0' as JOB_WEIGHT,'0'as JOB_PRIORITY,'Y' as JOB_ACTIVE_IND

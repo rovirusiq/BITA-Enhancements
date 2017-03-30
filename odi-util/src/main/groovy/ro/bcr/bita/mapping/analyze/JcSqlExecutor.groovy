@@ -73,8 +73,6 @@ public class JcSqlExecutor implements IMappingAnalyzeExtendedProcessor{
 			this.bitaSqlExecutor.executeInCurrentTransaction(sql);
 		}
 		this.params.createGroups(this.dependencyAnalyzer,this.bitaSqlExecutor);
-	
-		 
 		
 	}
 

@@ -8,11 +8,22 @@ public class JcJobIdGenerator implements IJcJobIdGenerator,IBitaGlobals {
 
 	@Override
 	public String generateJobId(JcRequestContext params,String mappingName) {
+		
+		String rsp;
 		if (BITA_ODI_SCENARIO_VERSION.equals(params.scenarioVersion)) {
-			return mappingName;
+			rsp=mappingName;
 		} else {
-			return mappingName+"_"+params.scenarioVersion;
+			rsp=mappingName+"_"+params.scenarioVersion;
 		}
+		
+		if (rsp.length()>100) {
+			Integer hcd=rsp.hashCode();
+			rsp=hcd.toString();
+			if (hcd<0) {
+				rsp=rsp.replace("-","")+"_";
+			}
+		}
+		return rsp;
 	}
 	
 	

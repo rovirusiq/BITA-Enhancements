@@ -11,6 +11,9 @@ import ro.bcr.bita.model.IBitaDomainFactory
 import ro.bcr.bita.odi.proxy.IOdiEntityFactory
 import ro.bcr.bita.sql.IBitaSqlStatementExecutor
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 public class JcGroupsCreator implements IJcJobGroupsCreator,IBitaGlobals{
 	
 	

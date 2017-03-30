@@ -29,7 +29,7 @@ class BitaAppFactory implements IBitaGlobals{
 	private final IOdiEntityFactory odiEntityFactory;
 	private final IBitaDomainFactory bitaDomainFactory;
 	
-	private BitaAppFactory(OdiInstance odiInstance) {
+	protected BitaAppFactory(OdiInstance odiInstance) {
 		this.odiEntityFactory=OdiEntityFactory.newInstance(odiInstance);
 		this.bitaDomainFactory=BitaDomainFactoryForMappingsWithMultipleTargets.newInstance(bitaModelFactory,this.odiEntityFactory);
 	}
@@ -41,6 +41,14 @@ class BitaAppFactory implements IBitaGlobals{
 	public static BitaAppFactory newInstance(OdiInstance odiInstance) {
 		return new BitaAppFactory(odiInstance);
 	}
+	
+	public static BitaAppFactory newInstance(String type,OdiInstance odiInstance) {
+		if (type.equals("VERSION_WORKAROUND")) {
+			return new BitaAppFactoryVersionAware(odiInstance);
+		}
+		return BitaAppFactory.newInstance(odiInstance);
+	}
+	
 	
 	/********************************************************************************************
 	 *

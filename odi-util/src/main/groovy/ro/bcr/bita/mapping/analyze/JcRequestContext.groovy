@@ -23,6 +23,8 @@ public class JcRequestContext implements IBitaGlobals {
 			this.dwhVersion=dwhVersion;
 			this.dwhRelease=dwhVersion;
 			this.groupIdentificationStrategy=grpIdentifcationStratgey;
+			//add test to veryfy startegyu and version
+			
 		}
 	
 		private JcRequestContext() {

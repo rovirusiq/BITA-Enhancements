@@ -6,12 +6,23 @@ import ro.bcr.bita.model.IOdiMapping
 import ro.bcr.bita.model.MappingDependency
 import ro.bcr.bita.sql.IBitaSqlExecutor
 
+import groovy.transform.CompileStatic
+
+@CompileStatic
 public class JcDalGroupStrategy implements IJcGroupIdentificationStrategy{
 	
-	private final JcSqlCommandsGenerator sqlGenerator;
+	protected final JcSqlCommandsGenerator sqlGenerator;
 	
 	public JcDalGroupStrategy(JcSqlCommandsGenerator sqlGen) {
 		this.sqlGenerator=sqlGen;
+	}
+	
+	protected String generateBaseStandardGroupName(JcRequestContext params,String leadingSourceName) {
+		return leadingSourceName;
+	}
+	
+	protected String generateBaseRecoGroupName(JcRequestContext param,String targetName) {
+		return "RECO_"+targetName;
 	}
 
 	@Override
@@ -29,14 +40,14 @@ public class JcDalGroupStrategy implements IJcGroupIdentificationStrategy{
 			 String sourceMapName=md.on();
 			 String lzMapName=md.who();
 			 
-			 IOdiMapping sourceMap=mapMappings.get(sourceMapName);
-			 IOdiMapping lzMap=mapMappings.get(lzMapName);
+			 IOdiMapping sourceMap=(IOdiMapping)mapMappings.get(sourceMapName);
+			 IOdiMapping lzMap=(IOdiMapping)mapMappings.get(lzMapName);
 			 
 			 String srcJobId=params.generateJobId(sourceMapName);
 			 String lzJobId=params.generateJobId(lzMapName);
 			 
-			 String jobGroupName=sourceMap.getLeadingSource();
-			 String jobGroupNameReco="RECO_"+lzMap.identifyTarget();
+			 String jobGroupName=generateBaseStandardGroupName(params,sourceMap.getLeadingSource());
+			 String jobGroupNameReco=generateBaseRecoGroupName(params,lzMap.identifyTarget());
 			 
 			 /*
 			  * Normal Dal Group

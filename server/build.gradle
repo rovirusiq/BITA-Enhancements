@@ -29,7 +29,7 @@ dependencies {
 	compile('org.springframework.boot:spring-boot-starter-logging')
 	compile('com.fasterxml.jackson.dataformat:jackson-dataformat-xml');
 	
-	compile project(':odi-util').configurations['archives'].getArtifacts().getFiles();
+	compile project(path:':odi-util',configuration:'archives');
 	compile files("${odiSdkRelativePath}/odi-core.jar");
 	
 	runtime files("${odiSdkRelativePath}/commons-httpclient-3.1.jar");

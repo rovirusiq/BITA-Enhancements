@@ -5,6 +5,7 @@ import ro.bcr.bita.mapping.analyze.BitaMappingAnalyzerService
 import ro.bcr.bita.mapping.analyze.IJcGroupIdentificationStrategy
 import ro.bcr.bita.mapping.analyze.IMappingAnalyzerService
 import ro.bcr.bita.mapping.analyze.JcDalGroupStrategy
+import ro.bcr.bita.mapping.analyze.JcInitialLoadStrategy
 import ro.bcr.bita.mapping.analyze.JcJobIdGenerator
 import ro.bcr.bita.mapping.analyze.JcLdsGroupStrategy
 import ro.bcr.bita.mapping.analyze.JcRequestContext
@@ -21,6 +22,7 @@ import ro.bcr.bita.odi.proxy.IOdiEntityFactory
 import ro.bcr.bita.odi.proxy.OdiEntityFactory
 import ro.bcr.bita.model.BitaDomainFactoryForMappingsWithMultipleTargets
 import ro.bcr.bita.app.OraclePhysicalServerConnectionProvider
+
 import oracle.odi.core.OdiInstance
 
 class BitaAppFactory implements IBitaGlobals{
@@ -110,6 +112,14 @@ class BitaAppFactory implements IBitaGlobals{
 		jcGroups.setJcGroupIdentificationStrategy(grpS);
 		return jcGroups;
 	}
+	
+	public IJcJobGroupsCreator newJcJobGroupsCreatorForInitialLoad(String dwhVersionCd,String topologyServerName) {
+		JcGroupsCreator jcGroups=newConfiguredJcGroupsCreator(dwhVersionCd,topologyServerName);
+		IJcGroupIdentificationStrategy grpS=new JcInitialLoadStrategy(newJcSqlCommandGenerator());
+		jcGroups.setJcGroupIdentificationStrategy(grpS);
+		return jcGroups;
+	}
+	
 	public IJcJobGroupsCreator newJcJobGroupsCreatorForLds(String jobGroupName,String dwhVersionCd,String topologyServerName) {
 		JcGroupsCreator jcGroups=newConfiguredJcGroupsCreator(dwhVersionCd,topologyServerName);
 		IJcGroupIdentificationStrategy grpS=new JcLdsGroupStrategy(jobGroupName,newJcSqlCommandGenerator());

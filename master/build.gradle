@@ -27,7 +27,7 @@ apply plugin: 'distribution'
 
 
 allprojects{
-	version="2.0-version-workaround";
+	version="2.2.0-RC1";
 	apply plugin:'java'
 	apply plugin:'jacoco'
 	

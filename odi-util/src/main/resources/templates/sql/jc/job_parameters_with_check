@@ -30,8 +30,8 @@ select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_PERIO
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SCENARIO_ID','',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SOURCE_DT')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SOURCE_DT','',null from dual
-<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SRCSTREAM_CD')) {%>union
-select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SRCSTREAM_CD','$leadingSource',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_SOURCE_STREAM_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_SOURCE_STREAM_CD','$leadingSource',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_TECHNICAL_DT')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TECHNICAL_DT','',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_VERSION_NUMBER')) {%>union
@@ -42,6 +42,8 @@ select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_LOAD_
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TNT_CD_LIST','ALL',null from dual
 <%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_TNT_REPROCESSING_IND')) {%>union
 select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_TNT_REPROCESSING_IND','N',null from dual
+<%}%><%if (scenarioParams.contains('GLOBAL.GVGRAN_DWH_VERSION_CD')) {%>union
+select '$jobId','$dwhVersion','$dwhRelease','$jobGroupName','GLOBAL.GVGRAN_DWH_VERSION_CD','',null from dual
 <%}%><%}%>) n
 on (e.job_id=n.job_id and e.dwh_version_cd=n.dwh_version_cd and e.release_cd=n.release_cd and e.jobgroup_id=n.jobgroup_id)
 when not matched then
